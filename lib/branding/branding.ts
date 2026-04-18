@@ -5,6 +5,7 @@ type BrandConfig = {
   productLabel: string;
   tagline: string;
   description: string;
+  ctaLabel: string;
   logo: {
     primary: string;
     accent: string;
@@ -16,9 +17,10 @@ type BrandConfig = {
 
 export const BRANDING: BrandConfig = {
   name: 'PixelFlow',
-  productLabel: 'Link Intelligence',
+  productLabel: 'Link Intelligent Player',
   tagline: 'Smooth playback for TeraBox and Pixeldrain links.',
   description: 'Paste your share URL. PixelFlow resolves it to a playable stream when available and shows clear source status when authentication is required.',
+  ctaLabel: 'Link Play',
   logo: {
     primary: '#99f7ff',
     accent: '#ff59e3',
@@ -42,3 +44,5 @@ export const getBrandHeadline = (): string => BRANDING.tagline;
 export const getBrandEyebrow = (): string => `${BRANDING.name} ${BRANDING.productLabel}`;
 
 export const getPlatformPill = (platform: BrandPlatform): string => BRANDING.platforms[platform].label;
+
+export const getPrimaryCtaLabel = (): string => BRANDING.ctaLabel;

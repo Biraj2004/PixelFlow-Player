@@ -79,7 +79,7 @@ button:disabled {
   }
 
   .pf-eyebrow {
-    @apply font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400;
+    @apply font-display text-[12px] font-semibold uppercase tracking-[0.17em] text-gray-400;
   }
 
   .pf-body {
@@ -128,6 +128,58 @@ button:disabled {
     filter: blur(1px);
     animation: pf-float-glow 10s ease-in-out infinite;
     pointer-events: none;
+  }
+
+  .pf-hero-micro {
+    @apply relative hidden h-[180px] w-[180px] justify-self-end rounded-full border border-white/10 bg-black/20 lg:block;
+    box-shadow: inset 0 0 28px rgba(153, 247, 255, 0.08);
+  }
+
+  .pf-hero-orbit {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(153, 247, 255, 0.22);
+  }
+
+  .pf-hero-orbit-a {
+    width: 130px;
+    height: 130px;
+    animation: pf-orbit-spin 9s linear infinite;
+  }
+
+  .pf-hero-orbit-b {
+    width: 88px;
+    height: 88px;
+    border-color: rgba(255, 89, 227, 0.26);
+    animation: pf-orbit-spin-reverse 7s linear infinite;
+  }
+
+  .pf-hero-dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    border-radius: 9999px;
+    background: #99f7ff;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 12px rgba(153, 247, 255, 0.6);
+    animation: pf-pulse-dot 1.8s ease-in-out infinite;
+  }
+
+  .pf-hero-beam {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1px;
+    height: 70px;
+    background: linear-gradient(180deg, rgba(255, 89, 227, 0.1) 0%, rgba(255, 89, 227, 0.65) 100%);
+    transform-origin: top center;
+    transform: translate(-50%, -50%) rotate(15deg);
+    animation: pf-beam-sweep 4.2s ease-in-out infinite;
   }
 
   .pf-provider-pill {
@@ -182,6 +234,47 @@ button:disabled {
   50% {
     opacity: 1;
     transform: scale(1.16);
+  }
+}
+
+@keyframes pf-orbit-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes pf-orbit-spin-reverse {
+  from {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+}
+
+@keyframes pf-beam-sweep {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(-25deg);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(35deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-hero-glow,
+  .pf-brand-pulse,
+  .pf-hero-orbit-a,
+  .pf-hero-orbit-b,
+  .pf-hero-dot,
+  .pf-hero-beam {
+    animation: none !important;
   }
 }
 

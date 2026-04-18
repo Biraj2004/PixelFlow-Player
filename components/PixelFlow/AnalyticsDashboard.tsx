@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { PIXELFLOW_ANALYTICS_STORAGE_KEY } from './utils/analyticsStorage';
 import type { PlayerAnalyticsSnapshot, PlayerDiagnostics, PlayerLog, Strategy } from './types';
+import PixelFlowLogo from '@/components/Branding/PixelFlowLogo';
+import { BRANDING } from '@/lib/branding/branding';
 
 type AnalyticsSnapshot = {
   status: string;
@@ -31,6 +33,23 @@ const emptySnapshot: AnalyticsSnapshot = {
   },
   logs: [],
   updatedAt: 0,
+};
+
+const getStatusTone = (status: string): string => {
+  const normalized = status.toLowerCase();
+
+  if (normalized === 'playing') return 'text-emerald-300 border-emerald-400/30 bg-emerald-400/10';
+  if (normalized === 'loading' || normalized === 'buffering' || normalized === 'switching') return 'text-amber-300 border-amber-400/30 bg-amber-400/10';
+  if (normalized === 'error') return 'text-rose-300 border-rose-400/30 bg-rose-400/10';
+
+  return 'text-gray-300 border-white/15 bg-white/5';
+};
+
+const getLogTone = (type: PlayerLog['type']): string => {
+  if (type === 'error') return 'text-rose-300';
+  if (type === 'warning') return 'text-amber-300';
+  if (type === 'success') return 'text-emerald-300';
+  return 'text-gray-200';
 };
 
 const AnalyticsDashboard = () => {
@@ -80,10 +99,26 @@ const AnalyticsDashboard = () => {
 
   const cards = useMemo(() => {
     return [
-      { label: 'Logs', value: snapshot.logs.length },
-      { label: 'Retries', value: snapshot.retries },
-      { label: 'Latency (ms)', value: snapshot.analytics.latencyMs },
-      { label: 'Buffer (s)', value: snapshot.analytics.bufferedSeconds },
+      {
+        label: 'Latency',
+        unit: 'ms',
+        value: snapshot.analytics.latencyMs,
+      },
+      {
+        label: 'Buffered',
+        unit: 's',
+        value: snapshot.analytics.bufferedSeconds,
+      },
+      {
+        label: 'Retries',
+        unit: '',
+        value: snapshot.retries,
+      },
+      {
+        label: 'Log Events',
+        unit: '',
+        value: snapshot.logs.length,
+      },
     ];
   }, [snapshot]);
 
@@ -101,39 +136,62 @@ const AnalyticsDashboard = () => {
   }, [nowTs, snapshot.updatedAt]);
 
   return (
-    <main className="min-h-screen px-6 py-10 md:px-10 lg:px-16">
-      <section className="mx-auto max-w-6xl space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-3xl text-foreground">Analytics</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-gray-500">{updatedLabel}</span>
-            <Link href="/" className="text-sm text-gray-300 underline decoration-primary/40 underline-offset-4 hover:text-primary">
-              Back to Player
-            </Link>
+    <main className="min-h-screen px-4 py-8 md:px-10 md:py-10 lg:px-16">
+      <section className="mx-auto max-w-6xl space-y-5">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-surface-low px-5 py-5 md:px-7">
+          <div className="absolute right-0 top-0 h-full w-48 bg-gradient-to-l from-primary/10 to-transparent" aria-hidden="true" />
+
+          <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-2">
+              <PixelFlowLogo size={36} />
+              <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem]">Playback Analytics</h1>
+              <p className="max-w-2xl text-sm text-gray-300">
+                Live session intelligence for {BRANDING.platforms.terabox.label.toLowerCase()} and {BRANDING.platforms.pixeldrain.label.toLowerCase()} playback health.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <span className="text-xs text-gray-500">{updatedLabel}</span>
+              <Link href="/" className="text-sm font-semibold text-gray-200 underline decoration-primary/40 underline-offset-4 hover:text-primary">
+                Back to Player
+              </Link>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {cards.map((card) => (
-            <div key={card.label} className="rounded-lg border border-white/10 bg-surface-low p-4">
+            <div key={card.label} className="rounded-xl border border-white/10 bg-surface-low/80 p-4 transition-colors hover:border-primary/25">
               <div className="text-[11px] uppercase tracking-[0.16em] text-gray-500">{card.label}</div>
-              <div className="mt-1 text-2xl font-display font-bold text-foreground">{card.value}</div>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="font-display text-3xl font-bold leading-none text-foreground">{card.value}</span>
+                {card.unit ? <span className="text-xs uppercase tracking-[0.14em] text-gray-500">{card.unit}</span> : null}
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="rounded-lg border border-white/10 bg-surface-low p-4 text-sm text-gray-300">Status: {snapshot.status}</div>
-          <div className="rounded-lg border border-white/10 bg-surface-low p-4 text-sm text-gray-300">Strategy: {snapshot.currentStrategy ?? 'none'}</div>
-          <div className="rounded-lg border border-white/10 bg-surface-low p-4 text-sm text-gray-300">Type: {snapshot.diagnostics?.mediaType ?? 'unknown'}</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${getStatusTone(snapshot.status)}`}>
+            Status: {snapshot.status}
+          </span>
+          <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-gray-300">
+            Strategy: {snapshot.currentStrategy ?? 'none'}
+          </span>
+          <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-gray-300">
+            Type: {snapshot.diagnostics?.mediaType ?? 'unknown'}
+          </span>
         </div>
 
-        <section className="rounded-lg border border-white/10 bg-surface-low overflow-hidden">
-          <div className="px-4 py-3 border-b border-white/10 text-xs font-display uppercase tracking-[0.16em] text-gray-400">Logs</div>
-          <div className="max-h-[360px] overflow-y-auto p-4 space-y-2 font-mono text-xs">
-            {snapshot.logs.length === 0 && <p className="text-gray-500">No logs captured yet.</p>}
+        <section className="overflow-hidden rounded-xl border border-white/10 bg-surface-low">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <span className="text-xs font-display uppercase tracking-[0.16em] text-gray-400">Session Logs</span>
+            <span className="text-[11px] uppercase tracking-[0.14em] text-gray-500">{snapshot.logs.length} entries</span>
+          </div>
+          <div className="max-h-[420px] space-y-2 overflow-y-auto p-4 font-mono text-xs">
+            {snapshot.logs.length === 0 && <p className="text-gray-500">No logs captured yet. Start playback to begin analytics capture.</p>}
             {snapshot.logs.map((log) => (
-              <div key={`${log.time}-${log.msg}`} className="flex gap-2 text-gray-300">
+              <div key={`${log.time}-${log.msg}`} className={`flex gap-2 rounded border border-white/5 bg-black/10 px-3 py-2 ${getLogTone(log.type)}`}>
                 <span className="text-gray-500">[{log.time}]</span>
                 <span>{log.msg}</span>
               </div>
