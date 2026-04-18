@@ -2,6 +2,7 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import clsx from 'clsx';
 import type { Metadata } from 'next';
+import { BRANDING } from '@/lib/branding/branding';
 
 const manrope = Manrope({ 
   subsets: ["latin"],
@@ -16,8 +17,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "PixelFlow",
-  description: "Play anything. Stream everything. Now with smarter TeraBox link playback.",
+  title: BRANDING.name,
+  description: BRANDING.description,
 };
 
 const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
