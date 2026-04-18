@@ -2,10 +2,13 @@ export type BrandPlatform = 'terabox' | 'pixeldrain';
 
 type BrandConfig = {
   name: string;
+  pageTitle: string;
   productLabel: string;
   tagline: string;
+  shortDescription: string;
   description: string;
   ctaLabel: string;
+  projectUrl: string;
   logo: {
     primary: string;
     accent: string;
@@ -17,10 +20,13 @@ type BrandConfig = {
 
 export const BRANDING: BrandConfig = {
   name: 'PixelFlow',
+  pageTitle: 'PixelFlow Player',
   productLabel: 'Link Intelligent Player',
-  tagline: 'Smooth playback for TeraBox and Pixeldrain links.',
+  tagline: 'Smooth playback for Links.',
+  shortDescription: 'Smart link playback for TeraBox and Pixeldrain.',
   description: 'Paste your share URL. PixelFlow resolves it to a playable stream when available and shows clear source status when authentication is required.',
   ctaLabel: 'Link Play',
+  projectUrl: 'https://github.com/Biraj2004/PixelFlow-Player',
   logo: {
     primary: '#99f7ff',
     accent: '#ff59e3',
@@ -46,3 +52,5 @@ export const getBrandEyebrow = (): string => `${BRANDING.name} ${BRANDING.produc
 export const getPlatformPill = (platform: BrandPlatform): string => BRANDING.platforms[platform].label;
 
 export const getPrimaryCtaLabel = (): string => BRANDING.ctaLabel;
+
+export const getProjectCtaLabel = (): string => 'View Project';

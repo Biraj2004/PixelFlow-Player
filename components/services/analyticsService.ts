@@ -1,6 +1,6 @@
 import type { PlayerAnalyticsSnapshot, PlayerDiagnostics, Strategy } from '../types';
 import { detectMediaType } from '../utils/mediaType';
-import { redactUrl } from '@/lib/pixelflow-server/security';
+import { redactUrl } from '@/lib/security';
 
 export const createDiagnostics = (url: string): PlayerDiagnostics => {
   const host = typeof window !== 'undefined' ? window.location.hostname : '';

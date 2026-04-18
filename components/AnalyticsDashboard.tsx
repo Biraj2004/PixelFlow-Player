@@ -1,11 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { PIXELFLOW_ANALYTICS_STORAGE_KEY } from './utils/analyticsStorage';
 import type { PlayerAnalyticsSnapshot, PlayerDiagnostics, PlayerLog, Strategy } from './types';
-import PixelFlowLogo from '@/components/Branding/PixelFlowLogo';
-import { BRANDING } from '@/lib/branding/branding';
 
 type AnalyticsSnapshot = {
   status: string;
@@ -52,7 +49,11 @@ const getLogTone = (type: PlayerLog['type']): string => {
   return 'text-gray-200';
 };
 
-const AnalyticsDashboard = () => {
+type AnalyticsDashboardProps = {
+  onClose?: () => void;
+};
+
+const AnalyticsDashboard = ({ onClose }: AnalyticsDashboardProps) => {
   const [snapshot, setSnapshot] = useState<AnalyticsSnapshot>(emptySnapshot);
   const [nowTs, setNowTs] = useState<number>(() => Date.now());
 
@@ -136,27 +137,19 @@ const AnalyticsDashboard = () => {
   }, [nowTs, snapshot.updatedAt]);
 
   return (
-    <main className="min-h-screen px-4 py-8 md:px-10 md:py-10 lg:px-16">
+    <section className="px-1 py-1">
       <section className="mx-auto max-w-6xl space-y-5">
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-surface-low px-5 py-5 md:px-7">
-          <div className="absolute right-0 top-0 h-full w-48 bg-gradient-to-l from-primary/10 to-transparent" aria-hidden="true" />
-
-          <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-2">
-              <PixelFlowLogo size={36} />
-              <h1 className="font-display text-2xl font-bold tracking-tight text-foreground md:text-[2rem]">Playback Analytics</h1>
-              <p className="max-w-2xl text-sm text-gray-300">
-                Live session intelligence for {BRANDING.platforms.terabox.label.toLowerCase()} and {BRANDING.platforms.pixeldrain.label.toLowerCase()} playback health.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-gray-500">{updatedLabel}</span>
-              <Link href="/" className="text-sm font-semibold text-gray-200 underline decoration-primary/40 underline-offset-4 hover:text-primary">
-                Back to Player
-              </Link>
-            </div>
-          </div>
+        <div className="flex items-center justify-end gap-4 px-1">
+          <span className="text-xs text-gray-500">{updatedLabel}</span>
+          {onClose ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-sm font-semibold text-gray-200 underline decoration-primary/40 underline-offset-4 hover:text-primary"
+            >
+              Close
+            </button>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -190,8 +183,8 @@ const AnalyticsDashboard = () => {
           </div>
           <div className="max-h-[420px] space-y-2 overflow-y-auto p-4 font-mono text-xs">
             {snapshot.logs.length === 0 && <p className="text-gray-500">No logs captured yet. Start playback to begin analytics capture.</p>}
-            {snapshot.logs.map((log) => (
-              <div key={`${log.time}-${log.msg}`} className={`flex gap-2 rounded border border-white/5 bg-black/10 px-3 py-2 ${getLogTone(log.type)}`}>
+            {snapshot.logs.map((log, index) => (
+              <div key={`${log.time}-${log.msg}-${index}`} className={`flex gap-2 rounded border border-white/5 bg-black/10 px-3 py-2 ${getLogTone(log.type)}`}>
                 <span className="text-gray-500">[{log.time}]</span>
                 <span>{log.msg}</span>
               </div>
@@ -199,7 +192,7 @@ const AnalyticsDashboard = () => {
           </div>
         </section>
       </section>
-    </main>
+    </section>
   );
 };
 

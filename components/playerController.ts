@@ -34,11 +34,38 @@ export class PlayerController {
   };
 
   private detectMediaType = (url: string): 'mp4' | 'mkv' | 'hls' | 'dash' | 'unknown' => {
-    const extension = url.split('?')[0]?.split('.').pop()?.toLowerCase();
-    if (extension === 'm3u8') return 'hls';
-    if (extension === 'mpd') return 'dash';
-    if (extension === 'mp4') return 'mp4';
-    if (extension === 'mkv') return 'mkv';
+    const detectFromPath = (value: string): 'mp4' | 'mkv' | 'hls' | 'dash' | 'unknown' => {
+      const extension = value.split('?')[0]?.split('.').pop()?.toLowerCase();
+      if (extension === 'm3u8') return 'hls';
+      if (extension === 'mpd') return 'dash';
+      if (extension === 'mp4') return 'mp4';
+      if (extension === 'mkv') return 'mkv';
+      return 'unknown';
+    };
+
+    const direct = detectFromPath(url);
+    if (direct !== 'unknown') {
+      return direct;
+    }
+
+    try {
+      const parsed = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+      const hinted = parsed.searchParams.get('pf_type')?.toLowerCase();
+      if (hinted === 'mp4' || hinted === 'mkv' || hinted === 'hls' || hinted === 'dash') {
+        return hinted;
+      }
+
+      if (parsed.pathname.endsWith('/api/stream')) {
+        const nestedUrl = parsed.searchParams.get('url') ?? '';
+        const nestedDetected = detectFromPath(decodeURIComponent(nestedUrl));
+        if (nestedDetected !== 'unknown') {
+          return nestedDetected;
+        }
+      }
+    } catch {
+      // Ignore malformed URL parsing and continue with unknown media type.
+    }
+
     return 'unknown';
   };
 
@@ -69,6 +96,10 @@ export class PlayerController {
         strategies.push('dash');
       }
       return Array.from(new Set(strategies));
+    }
+
+    if (mediaType === 'mp4' || mediaType === 'mkv') {
+      return strategies;
     }
 
     if (HlsAdapter.isSupported() || supportsNativeHls) {
@@ -189,10 +220,10 @@ export class PlayerController {
     this.currentAdapter.attach(this.videoElement);
 
     try {
+      this.setState('buffering');
       await this.currentAdapter.load(this.currentUrl);
       this.publishTracks();
       await this.videoElement.play();
-      this.setState('playing');
     } catch (error) {
       this.handleError(error instanceof Error ? error : new Error('Unknown playback error'));
     }

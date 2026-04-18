@@ -10,7 +10,9 @@ type SessionIntakePanelProps = {
   sourceStatusTone: AnalysisSeverity;
   onChange: (field: keyof IntakeState, value: string) => void;
   onApply: () => void;
+  onClear: () => void;
   canApply: boolean;
+  canClear: boolean;
 };
 
 const statusToneClasses: Record<AnalysisSeverity, string> = {
@@ -28,7 +30,9 @@ const SessionIntakePanel = ({
   sourceStatusTone,
   onChange,
   onApply,
+  onClear,
   canApply,
+  canClear,
 }: SessionIntakePanelProps) => {
   return (
     <section className="rounded-xl border border-white/10 bg-surface-low p-5 md:p-6 space-y-4">
@@ -70,14 +74,25 @@ const SessionIntakePanel = ({
         </label>
       </div>
 
-      <button
-        type="button"
-        onClick={onApply}
-        disabled={!canApply}
-        className="rounded bg-gradient-to-br from-primary to-primary-container px-5 py-2 text-sm font-bold tracking-wide text-black disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        Apply Session
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={onApply}
+          disabled={!canApply}
+          className="rounded bg-gradient-to-br from-primary to-primary-container px-5 py-2 text-sm font-bold tracking-wide text-black disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Apply Session
+        </button>
+
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={!canClear}
+          className="rounded border border-white/20 bg-transparent px-4 py-2 text-sm font-semibold tracking-wide text-gray-200 transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Clear Link
+        </button>
+      </div>
     </section>
   );
 };

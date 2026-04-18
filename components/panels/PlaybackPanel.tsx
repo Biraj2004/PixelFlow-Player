@@ -8,6 +8,7 @@ type PlaybackPanelProps = {
   playerShellRef: React.RefObject<HTMLDivElement | null>;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   status: PlayerStatus;
+  isActivelyPlaying: boolean;
   currentStrategy: Strategy | null;
   isMuted: boolean;
   isFullscreen: boolean;
@@ -24,6 +25,7 @@ const PlaybackPanel = ({
   playerShellRef,
   videoRef,
   status,
+  isActivelyPlaying,
   currentStrategy,
   isMuted,
   isFullscreen,
@@ -37,9 +39,30 @@ const PlaybackPanel = ({
 }: PlaybackPanelProps) => {
   const isError = status === 'error';
   const canUsePlaybackControls = hasActiveSource && status !== 'loading' && status !== 'switching';
-  const primaryActionLabel = status === 'playing' ? 'Pause' : status === 'idle' || status === 'error' ? 'Load & Play' : 'Play';
+  const showPauseAction = status === 'playing' || (status === 'buffering' && isActivelyPlaying);
+  const primaryActionLabel = showPauseAction ? 'Pause' : status === 'idle' || status === 'error' ? 'Load & Play' : 'Play';
   const [showControls, setShowControls] = useState(true);
+  const [durationSeconds, setDurationSeconds] = useState(0);
+  const [currentTimeSeconds, setCurrentTimeSeconds] = useState(0);
+  const [bufferedSeconds, setBufferedSeconds] = useState(0);
   const hideControlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const formatClock = useCallback((seconds: number): string => {
+    if (!Number.isFinite(seconds) || seconds < 0) {
+      return '00:00';
+    }
+
+    const total = Math.floor(seconds);
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const secs = total % 60;
+
+    if (hours > 0) {
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }, []);
 
   const clearHideControlsTimer = useCallback((): void => {
     if (!hideControlsTimerRef.current) {
@@ -87,6 +110,112 @@ const PlaybackPanel = ({
       clearHideControlsTimer();
     };
   }, [clearHideControlsTimer]);
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
+
+    if (!videoElement) {
+      return;
+    }
+
+    const syncProgress = (): void => {
+      const duration = Number.isFinite(videoElement.duration) ? videoElement.duration : 0;
+      setDurationSeconds(duration);
+      setCurrentTimeSeconds(videoElement.currentTime || 0);
+
+      if (videoElement.buffered.length > 0) {
+        const bufferedEnd = videoElement.buffered.end(videoElement.buffered.length - 1) || 0;
+        setBufferedSeconds(bufferedEnd);
+      } else {
+        setBufferedSeconds(0);
+      }
+    };
+
+    const onSourceReset = (): void => {
+      setDurationSeconds(0);
+      setCurrentTimeSeconds(0);
+      setBufferedSeconds(0);
+    };
+
+    videoElement.addEventListener('timeupdate', syncProgress);
+    videoElement.addEventListener('loadedmetadata', syncProgress);
+    videoElement.addEventListener('durationchange', syncProgress);
+    videoElement.addEventListener('progress', syncProgress);
+    videoElement.addEventListener('seeked', syncProgress);
+    videoElement.addEventListener('emptied', onSourceReset);
+
+    syncProgress();
+
+    return () => {
+      videoElement.removeEventListener('timeupdate', syncProgress);
+      videoElement.removeEventListener('loadedmetadata', syncProgress);
+      videoElement.removeEventListener('durationchange', syncProgress);
+      videoElement.removeEventListener('progress', syncProgress);
+      videoElement.removeEventListener('seeked', syncProgress);
+      videoElement.removeEventListener('emptied', onSourceReset);
+    };
+  }, [videoRef]);
+
+  const onSeek = useCallback((event: React.ChangeEvent<HTMLInputElement>): void => {
+    const next = Number(event.target.value);
+    if (!Number.isFinite(next)) {
+      return;
+    }
+
+    const videoElement = videoRef.current;
+    if (videoElement) {
+      videoElement.currentTime = next;
+    }
+
+    setCurrentTimeSeconds(next);
+  }, [videoRef]);
+
+  const scrubMax = durationSeconds > 0 ? durationSeconds : 0;
+  const bufferedPct = scrubMax > 0 ? Math.min((bufferedSeconds / scrubMax) * 100, 100) : 0;
+  const playedPct = scrubMax > 0 ? Math.min((currentTimeSeconds / scrubMax) * 100, 100) : 0;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (!hasActiveSource) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      if (event.code === 'Space') {
+        event.preventDefault();
+        void onTogglePlay();
+        return;
+      }
+
+      const videoElement = videoRef.current;
+      if (!videoElement) {
+        return;
+      }
+
+      if (event.code === 'ArrowRight') {
+        event.preventDefault();
+        const nextTime = Math.min(videoElement.currentTime + 5, Number.isFinite(videoElement.duration) ? videoElement.duration : videoElement.currentTime + 5);
+        videoElement.currentTime = nextTime;
+        setCurrentTimeSeconds(nextTime);
+      }
+
+      if (event.code === 'ArrowLeft') {
+        event.preventDefault();
+        const nextTime = Math.max(videoElement.currentTime - 5, 0);
+        videoElement.currentTime = nextTime;
+        setCurrentTimeSeconds(nextTime);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [hasActiveSource, onTogglePlay, videoRef]);
 
   return (
     <div
@@ -144,6 +273,35 @@ const PlaybackPanel = ({
             showControls || !isFullscreen || isError ? 'opacity-100' : 'pointer-events-none opacity-0',
           )}
         >
+          <div className="mb-2">
+            <div className="mb-1 flex items-center justify-between text-[10px] font-semibold tracking-[0.12em] text-gray-400">
+              <span>{formatClock(currentTimeSeconds)}</span>
+              <span>{formatClock(durationSeconds)}</span>
+            </div>
+
+            <div className="relative h-2 rounded-full bg-white/10">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-white/20"
+                style={{ width: `${bufferedPct}%` }}
+              />
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-primary shadow-[0_0_10px_rgba(153,247,255,0.35)]"
+                style={{ width: `${playedPct}%` }}
+              />
+              <input
+                type="range"
+                min={0}
+                max={scrubMax}
+                step={0.1}
+                value={Math.min(currentTimeSeconds, scrubMax)}
+                onChange={onSeek}
+                disabled={!canUsePlaybackControls || scrubMax <= 0}
+                aria-label="Seek timeline"
+                className="absolute inset-0 h-2 w-full cursor-pointer appearance-none rounded-full bg-transparent accent-primary disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+          </div>
+
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 sm:gap-3">
               <button
@@ -153,7 +311,7 @@ const PlaybackPanel = ({
                 title={primaryActionLabel}
                 className="inline-flex items-center gap-2 rounded border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {status === 'playing' ? <Pause size={16} /> : <Play size={16} />}
+                {showPauseAction ? <Pause size={16} /> : <Play size={16} />}
                 <span className="hidden sm:inline">{primaryActionLabel}</span>
               </button>
 
@@ -187,7 +345,7 @@ const PlaybackPanel = ({
                   isMuted ? 'text-gray-300' : 'text-primary',
                 )}
               >
-                {isMuted ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
               </button>
             </div>
 

@@ -110,12 +110,12 @@ export class HlsAdapter implements PlaybackAdapter {
 
         switch (data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:
-            console.error('[HlsAdapter] fatal network error, trying startLoad recovery');
-            this.hls.startLoad();
+            cleanup();
+            reject(new Error(`HLS fatal network error: ${data.details}`));
             break;
           case Hls.ErrorTypes.MEDIA_ERROR:
-            console.error('[HlsAdapter] fatal media error, trying recoverMediaError');
-            this.hls.recoverMediaError();
+            cleanup();
+            reject(new Error(`HLS fatal media error: ${data.details}`));
             break;
           default:
             cleanup();

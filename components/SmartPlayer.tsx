@@ -1,11 +1,11 @@
 'use client';
 
-import { type ReactElement, useMemo, useState } from 'react';
-import Link from 'next/link';
+import { type ReactElement, useCallback, useMemo, useState } from 'react';
 import { usePlayerSession } from './hooks/usePlayerSession';
 import type { StreamOption } from './types';
 import { detectMediaType } from './utils/mediaType';
 import { buildPlaylistFromIntake, parseIntake, type IntakeState } from './utils/playlistInput';
+import AnalyticsDashboard from './AnalyticsDashboard';
 import PlaybackPanel from './panels/PlaybackPanel';
 import SessionIntakePanel from './panels/SessionIntakePanel';
 import SidebarPanel from './panels/SidebarPanel';
@@ -20,13 +20,16 @@ const DEFAULT_INTAKE: IntakeState = {
   sourceInput: '',
 };
 
+const EMPTY_SESSION: SessionConfig = {
+  playlist: [],
+  initialUrl: '',
+  subtitleUrl: '',
+};
+
 const SmartPlayer = (): ReactElement => {
   const [intake, setIntake] = useState<IntakeState>(DEFAULT_INTAKE);
-  const [sessionConfig, setSessionConfig] = useState<SessionConfig>({
-    playlist: [],
-    initialUrl: '',
-    subtitleUrl: '',
-  });
+  const [sessionConfig, setSessionConfig] = useState<SessionConfig>(EMPTY_SESSION);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const {
     audioTracks,
@@ -36,6 +39,7 @@ const SmartPlayer = (): ReactElement => {
     currentStrategy,
     diagnostics,
     analysisMessage,
+    audioSupportNotice,
     analysisSeverity,
     analysisDecision,
     sourceStatusLabel,
@@ -43,6 +47,7 @@ const SmartPlayer = (): ReactElement => {
     currentFormat,
     supportedFormats,
     isFullscreen,
+    isActivelyPlaying,
     isMuted,
     loadCurrent,
     loadNext,
@@ -51,6 +56,7 @@ const SmartPlayer = (): ReactElement => {
     playerShellRef,
     status,
     subtitleTracks,
+    setUrl,
     toggleMute,
     toggleFullscreen,
     togglePlay,
@@ -91,6 +97,20 @@ const SmartPlayer = (): ReactElement => {
     });
   };
 
+  const clearSessionInput = useCallback((): void => {
+    setIntake(DEFAULT_INTAKE);
+    setSessionConfig(EMPTY_SESSION);
+    setUrl('');
+
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.removeAttribute('src');
+      videoRef.current.load();
+    }
+  }, [setUrl, videoRef]);
+
+  const canClearSession = intake.sourceInput.trim().length > 0 || sessionConfig.initialUrl.trim().length > 0;
+
   return (
     <div className="w-full max-w-7xl mx-auto p-4 space-y-6">
       <SessionIntakePanel
@@ -101,7 +121,9 @@ const SmartPlayer = (): ReactElement => {
         sourceStatusTone={sourceStatusTone}
         onChange={updateIntake}
         onApply={applySession}
+        onClear={clearSessionInput}
         canApply={canApplySession}
+        canClear={canClearSession}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -110,6 +132,7 @@ const SmartPlayer = (): ReactElement => {
             playerShellRef={playerShellRef}
             videoRef={videoRef}
             status={status}
+            isActivelyPlaying={isActivelyPlaying}
             currentStrategy={currentStrategy}
             isMuted={isMuted}
             isFullscreen={isFullscreen}
@@ -135,6 +158,7 @@ const SmartPlayer = (): ReactElement => {
             analysisDecision={analysisDecision}
             analysisSeverity={analysisSeverity}
             analysisMessage={analysisMessage}
+            audioSupportNotice={audioSupportNotice}
             onChooseStream={chooseStream}
             onChooseAudio={chooseAudioTrack}
             onChooseSubtitle={chooseSubtitleTrack}
@@ -146,13 +170,18 @@ const SmartPlayer = (): ReactElement => {
         <div className="pf-body">
           Need deeper playback logs, retries, and session diagnostics?
         </div>
-        <Link
-          href="/analytics"
+        <button
+          type="button"
+          onClick={() => {
+            setShowAnalytics((value) => !value);
+          }}
           className="pf-btn-primary w-fit"
         >
-          Open Analytics
-        </Link>
+          {showAnalytics ? 'Hide Analytics' : 'Open Analytics'}
+        </button>
       </section>
+
+      {showAnalytics ? <AnalyticsDashboard onClose={() => setShowAnalytics(false)} /> : null}
     </div>
   );
 };

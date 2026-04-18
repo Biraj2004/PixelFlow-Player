@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { BRANDING } from '@/lib/branding/branding';
+import { BRANDING } from '@/branding/branding';
 
 export const size = {
   width: 64,

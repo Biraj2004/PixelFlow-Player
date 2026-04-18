@@ -1,4 +1,4 @@
-import { BRANDING } from '@/lib/branding/branding';
+import { BRANDING } from '@/branding/branding';
 
 type PixelFlowLogoProps = {
   size?: number;

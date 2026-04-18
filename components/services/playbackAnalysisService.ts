@@ -9,6 +9,26 @@ type SourceResolutionPayload = {
   label?: string;
 };
 
+const getAudioCompatibilityMessage = (audioCodec?: string): string => {
+  const normalized = (audioCodec ?? '').toLowerCase();
+
+  if (normalized === 'eac3' || normalized === 'ec-3' || normalized === 'ac3' || normalized === 'ac-3') {
+    return 'EAC3/DD 5.1 audio is not supported in this player. Only AAC 2.0 audio is supported for reliable playback.';
+  }
+
+  return '';
+};
+
+const getAudioSupportNotice = (audioCodec?: string): string => {
+  const normalized = (audioCodec ?? '').toLowerCase();
+
+  if (normalized === 'eac3' || normalized === 'ec-3' || normalized === 'ac3' || normalized === 'ac-3') {
+    return 'EAC3/DD 5.1 is not supported. Only AAC 2.0 is supported.';
+  }
+
+  return 'AAC 2.0 is supported.';
+};
+
 const deriveSourceStatus = (sourceResolution?: SourceResolutionPayload): Pick<PlaybackAnalysisResult, 'sourceStatusLabel' | 'sourceStatusTone'> => {
   if (!sourceResolution || sourceResolution.status === 'none') {
     return {
@@ -68,6 +88,15 @@ const buildAbsolutePlayableUrl = (playableUrl: string): string => {
   return playableUrl.startsWith('/') ? playableUrl : `/api/stream?url=${encodeURIComponent(playableUrl)}`;
 };
 
+const withPlaybackTypeHint = (playbackUrl: string, currentFormat: PlaybackAnalysisResult['currentFormat']): string => {
+  if (currentFormat === 'unknown' || !playbackUrl.startsWith('/api/stream')) {
+    return playbackUrl;
+  }
+
+  const separator = playbackUrl.includes('?') ? '&' : '?';
+  return `${playbackUrl}${separator}pf_type=${encodeURIComponent(currentFormat)}`;
+};
+
 const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | null> => {
   const response = await fetch('/api/analyze', {
     method: 'POST',
@@ -84,6 +113,7 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
     metadata?: {
       type?: PlaybackAnalysisResult['currentFormat'];
       contentType?: string;
+      audioCodec?: string;
     };
     sourceResolution?: SourceResolutionPayload;
     error?: string;
@@ -117,6 +147,8 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
 
   const metadataType = payload.metadata?.type;
   const typeFromContent = detectMediaTypeFromContentType(payload.metadata?.contentType ?? '');
+  const audioCompatibilityMessage = getAudioCompatibilityMessage(payload.metadata?.audioCodec);
+  const audioSupportNotice = getAudioSupportNotice(payload.metadata?.audioCodec);
   const currentFormat = metadataType && metadataType !== 'unknown'
     ? metadataType
     : (typeFromContent !== 'unknown' ? typeFromContent : detectMediaType(url));
@@ -128,6 +160,7 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
       decision: 'error',
       severity: 'error',
       message: payload.error || 'Analyze failed. Unable to determine safe playback strategy.',
+      audioSupportNotice,
       sourceStatusLabel: sourceStatus.sourceStatusLabel,
       sourceStatusTone: sourceStatus.sourceStatusTone,
       currentFormat,
@@ -135,15 +168,19 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
     };
   }
 
-  const playbackUrl = buildAbsolutePlayableUrl(payload.playableUrl || url);
+  const playbackUrl = withPlaybackTypeHint(
+    buildAbsolutePlayableUrl(payload.playableUrl || url),
+    currentFormat,
+  );
 
   if (payload.strategy === 'direct') {
     return {
       shouldProceed: true,
       playbackUrl,
       decision: 'direct',
-      severity: 'success',
-      message: 'Analysis complete: direct playback selected.',
+      severity: audioCompatibilityMessage ? 'warning' : 'success',
+      message: audioCompatibilityMessage || 'Analysis complete: direct playback selected.',
+      audioSupportNotice,
       sourceStatusLabel: sourceStatus.sourceStatusLabel,
       sourceStatusTone: sourceStatus.sourceStatusTone,
       currentFormat,
@@ -157,7 +194,8 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
       playbackUrl,
       decision: 'proxy',
       severity: 'warning',
-      message: 'Analysis complete: proxy playback selected due to network/CORS constraints.',
+      message: audioCompatibilityMessage || 'Analysis complete: proxy playback selected due to network/CORS constraints.',
+      audioSupportNotice,
       sourceStatusLabel: sourceStatus.sourceStatusLabel,
       sourceStatusTone: sourceStatus.sourceStatusTone,
       currentFormat,
@@ -171,7 +209,8 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
       playbackUrl,
       decision: 'transcode',
       severity: 'warning',
-      message: 'Analysis complete: transcoding path selected for codec compatibility.',
+      message: audioCompatibilityMessage || 'Analysis complete: transcoding path selected for codec compatibility.',
+      audioSupportNotice,
       sourceStatusLabel: sourceStatus.sourceStatusLabel,
       sourceStatusTone: sourceStatus.sourceStatusTone,
       currentFormat,
@@ -185,6 +224,7 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
     decision: 'error',
     severity: 'error',
     message: 'Analysis complete: stream marked non-playable.',
+    audioSupportNotice,
     sourceStatusLabel: sourceStatus.sourceStatusLabel,
     sourceStatusTone: sourceStatus.sourceStatusTone,
     currentFormat,
@@ -202,6 +242,7 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'error',
       severity: 'error',
       message: 'No URL provided for analysis.',
+      audioSupportNotice: 'AAC 2.0 is supported.',
       sourceStatusLabel: '',
       sourceStatusTone: 'info',
       currentFormat: 'unknown',
@@ -216,6 +257,7 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'error',
       severity: 'error',
       message: 'Invalid URL. Please provide an http or https media link.',
+      audioSupportNotice: 'AAC 2.0 is supported.',
       sourceStatusLabel: '',
       sourceStatusTone: 'info',
       currentFormat: 'unknown',
@@ -243,6 +285,7 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'error',
       severity: 'error',
       message: 'Analysis: unknown media format. Provide mp4, mkv, m3u8, or mpd.',
+      audioSupportNotice: 'AAC 2.0 is supported.',
       sourceStatusLabel: '',
       sourceStatusTone: 'info',
       currentFormat: mediaType,
@@ -257,6 +300,7 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'transcode',
       severity: 'warning',
       message: 'Analysis: MKV detected. Playback will try fallback chain and may require transcoding.',
+      audioSupportNotice: 'AAC 2.0 is supported.',
       sourceStatusLabel: '',
       sourceStatusTone: 'info',
       currentFormat: mediaType,
@@ -271,6 +315,7 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'proxy',
       severity: 'warning',
       message: 'Analysis: cross-origin source detected. Playback starts now and may require proxy fallback.',
+      audioSupportNotice: 'AAC 2.0 is supported.',
       sourceStatusLabel: '',
       sourceStatusTone: 'info',
       currentFormat: mediaType,
@@ -284,6 +329,7 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
     decision: 'direct',
     severity: 'success',
     message: 'Analysis: source looks directly playable. Starting stream.',
+    audioSupportNotice: 'AAC 2.0 is supported.',
     sourceStatusLabel: '',
     sourceStatusTone: 'info',
     currentFormat: mediaType,

@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
-import { isManifestContent, rewriteManifest } from '@/lib/pixelflow-server/manifestRewrite';
-import { checkRateLimit, getClientAddress } from '@/lib/pixelflow-server/security';
-import { resolvePlayableSource } from '@/lib/pixelflow-server/sourceResolver';
-import { assertSafeUrl } from '@/lib/pixelflow-server/urlValidation';
+import { isManifestContent, rewriteManifest } from '@/lib/manifestRewrite';
+import { checkRateLimit, getClientAddress } from '@/lib/security';
+import { resolvePlayableSource } from '@/lib/sourceResolver';
+import { assertSafeUrl } from '@/lib/urlValidation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

@@ -71,9 +71,40 @@ export class NativeAdapter implements PlaybackAdapter {
       throw new Error('Video element not attached');
     }
 
-    this.videoElement.src = url;
-    this.videoElement.load();
-    this.onTracksChanged?.();
+    const video = this.videoElement;
+
+    await new Promise<void>((resolve, reject) => {
+      const onReady = (): void => {
+        cleanup();
+        this.onTracksChanged?.();
+        resolve();
+      };
+
+      const onError = (): void => {
+        cleanup();
+        const mediaError = video.error;
+        reject(new Error(mediaError ? `Native playback error code ${mediaError.code}` : 'Native playback failed to load media'));
+      };
+
+      const cleanup = (): void => {
+        video.removeEventListener('loadedmetadata', onReady);
+        video.removeEventListener('canplay', onReady);
+        video.removeEventListener('error', onError);
+        window.clearTimeout(timeoutId);
+      };
+
+      const timeoutId = window.setTimeout(() => {
+        cleanup();
+        reject(new Error('Timed out waiting for media metadata'));
+      }, 10_000);
+
+      video.addEventListener('loadedmetadata', onReady);
+      video.addEventListener('canplay', onReady);
+      video.addEventListener('error', onError);
+
+      video.src = url;
+      video.load();
+    });
   };
 
   destroy = (): void => {

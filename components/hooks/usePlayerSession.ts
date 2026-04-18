@@ -6,7 +6,7 @@ import { buildAnalyticsSnapshot, createDiagnostics } from '../services/analytics
 import { analyzePlaybackSource } from '../services/playbackAnalysisService';
 import { PlayerController } from '../playerController';
 import { PIXELFLOW_ANALYTICS_STORAGE_KEY } from '../utils/analyticsStorage';
-import { redactUrl } from '@/lib/pixelflow-server/security';
+import { redactUrl } from '@/lib/security';
 import type {
   AnalysisDecision,
   AnalysisSeverity,
@@ -45,16 +45,18 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
 
   const [url, setUrl] = useState(initialUrl || playlist[0]?.url || '');
   const [status, setStatus] = useState<PlayerStatus>('idle');
+  const [isActivelyPlaying, setIsActivelyPlaying] = useState(false);
   const [logs, setLogs] = useState<PlayerLog[]>([]);
   const [currentStrategy, setCurrentStrategy] = useState<Strategy | null>(null);
   const [retries, setRetries] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [audioTracks, setAudioTracks] = useState<SelectableTrack[]>([]);
   const [subtitleTracks, setSubtitleTracks] = useState<SelectableTrack[]>([]);
   const [diagnostics, setDiagnostics] = useState<PlayerDiagnostics | null>(null);
   const [analytics, setAnalytics] = useState<PlayerAnalyticsSnapshot>(INITIAL_ANALYTICS);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [analysisMessage, setAnalysisMessage] = useState('');
+  const [audioSupportNotice, setAudioSupportNotice] = useState('AAC 2.0 is supported.');
   const [analysisSeverity, setAnalysisSeverity] = useState<AnalysisSeverity>('info');
   const [analysisDecision, setAnalysisDecision] = useState<AnalysisDecision>('direct');
   const [sourceStatusLabel, setSourceStatusLabel] = useState('');
@@ -175,6 +177,35 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
 
   useEffect(() => {
     const videoElement = videoRef.current;
+    if (!videoElement) {
+      return;
+    }
+
+    const onPlaying = (): void => {
+      setIsActivelyPlaying(true);
+    };
+
+    const onPausedLike = (): void => {
+      setIsActivelyPlaying(false);
+    };
+
+    videoElement.addEventListener('playing', onPlaying);
+    videoElement.addEventListener('pause', onPausedLike);
+    videoElement.addEventListener('ended', onPausedLike);
+    videoElement.addEventListener('emptied', onPausedLike);
+    videoElement.addEventListener('error', onPausedLike);
+
+    return () => {
+      videoElement.removeEventListener('playing', onPlaying);
+      videoElement.removeEventListener('pause', onPausedLike);
+      videoElement.removeEventListener('ended', onPausedLike);
+      videoElement.removeEventListener('emptied', onPausedLike);
+      videoElement.removeEventListener('error', onPausedLike);
+    };
+  }, []);
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
     if (!videoElement || !externalSubtitleUrl) {
       return;
     }
@@ -235,12 +266,14 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
       return;
     }
 
+    setIsActivelyPlaying(false);
     setUrl(sourceUrl);
     setLogs([]);
     setRetries(0);
 
     const analysis = await analyzePlaybackSource(sourceUrl);
     setAnalysisMessage(analysis.message);
+    setAudioSupportNotice(analysis.audioSupportNotice);
     setAnalysisSeverity(analysis.severity);
     setAnalysisDecision(analysis.decision);
     setSourceStatusLabel(analysis.sourceStatusLabel);
@@ -314,7 +347,7 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
       return;
     }
 
-    if (status === 'playing') {
+    if (status === 'playing' || (status === 'buffering' && isActivelyPlaying)) {
       controllerRef.current.pause();
       return;
     }
@@ -325,7 +358,7 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
     }
 
     await controllerRef.current.play();
-  }, [load, status, url]);
+  }, [isActivelyPlaying, load, status, url]);
 
   const toggleMute = useCallback((): void => {
     setIsMuted((value) => !value);
@@ -389,6 +422,7 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
       logs,
       analysisDecision,
       analysisMessage,
+      audioSupportNotice,
       analysisSeverity,
       currentFormat,
       supportedFormats,
@@ -400,6 +434,7 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
     analytics,
     analysisDecision,
     analysisMessage,
+    audioSupportNotice,
     analysisSeverity,
     currentFormat,
     currentStrategy,
@@ -416,12 +451,14 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
     url,
     setUrl,
     status,
+    isActivelyPlaying,
     logs,
     retries,
     isMuted,
     currentStrategy,
     diagnostics,
     analysisMessage,
+    audioSupportNotice,
     analysisSeverity,
     analysisDecision,
     sourceStatusLabel,

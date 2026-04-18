@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeStream } from '@/lib/pixelflow-server/analyzer';
-import { pickStrategy } from '@/lib/pixelflow-server/decisionEngine';
-import { checkRateLimit, getClientAddress } from '@/lib/pixelflow-server/security';
-import { resolvePlayableSource, SourceResolutionError } from '@/lib/pixelflow-server/sourceResolver';
-import type { AnalyzeFailure, AnalyzeSuccess } from '@/lib/pixelflow-server/types';
-import { assertSafeUrl } from '@/lib/pixelflow-server/urlValidation';
+import { analyzeStream } from '@/lib/analyzer';
+import { pickStrategy } from '@/lib/decisionEngine';
+import { checkRateLimit, getClientAddress } from '@/lib/security';
+import { resolvePlayableSource, SourceResolutionError } from '@/lib/sourceResolver';
+import type { AnalyzeFailure, AnalyzeSuccess } from '@/lib/types';
+import { assertSafeUrl } from '@/lib/urlValidation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -56,7 +56,9 @@ export const POST = async (request: NextRequest): Promise<NextResponse<AnalyzeSu
     const metadata = await analyzeStream(safeUrl);
     const selectedStrategy = pickStrategy({ metadata, forceProxy });
     // Transcoding is not available in this deployment tier; proxy is the safe fallback.
-    const strategy = selectedStrategy === 'transcode' ? 'proxy' : selectedStrategy;
+    const strategy = forceProxy || resolvedSource.sourceResolution.provider === 'pixeldrain' || selectedStrategy === 'transcode'
+      ? 'proxy'
+      : selectedStrategy;
     const playableUrl = strategy === 'proxy' ? `/api/stream?url=${encodeURIComponent(safeUrl)}` : safeUrl;
 
     const payload: AnalyzeSuccess = {

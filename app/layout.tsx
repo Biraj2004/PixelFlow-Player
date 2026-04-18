@@ -2,7 +2,7 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import clsx from 'clsx';
 import type { Metadata } from 'next';
-import { BRANDING } from '@/lib/branding/branding';
+import { BRANDING } from '@/branding/branding';
 
 const manrope = Manrope({ 
   subsets: ["latin"],
@@ -17,8 +17,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: BRANDING.name,
-  description: BRANDING.description,
+  title: BRANDING.pageTitle,
+  description: BRANDING.shortDescription,
 };
 
 const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
