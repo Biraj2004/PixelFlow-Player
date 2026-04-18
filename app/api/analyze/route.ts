@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { analyzeStream } from '@/lib/pixelflow-server/analyzer';
 import { pickStrategy } from '@/lib/pixelflow-server/decisionEngine';
 import { checkRateLimit, getClientAddress } from '@/lib/pixelflow-server/security';
+import { resolvePlayableSource, SourceResolutionError } from '@/lib/pixelflow-server/sourceResolver';
 import type { AnalyzeFailure, AnalyzeSuccess } from '@/lib/pixelflow-server/types';
 import { assertSafeUrl } from '@/lib/pixelflow-server/urlValidation';
 
@@ -50,7 +51,8 @@ export const POST = async (request: NextRequest): Promise<NextResponse<AnalyzeSu
   }
 
   try {
-    const safeUrl = await assertSafeUrl(url);
+    const resolvedSource = await resolvePlayableSource(url);
+    const safeUrl = await assertSafeUrl(resolvedSource.url);
     const metadata = await analyzeStream(safeUrl);
     const selectedStrategy = pickStrategy({ metadata, forceProxy });
     // Transcoding is not available in this deployment tier; proxy is the safe fallback.
@@ -62,10 +64,19 @@ export const POST = async (request: NextRequest): Promise<NextResponse<AnalyzeSu
       playableUrl,
       strategy,
       metadata,
+      sourceResolution: resolvedSource.sourceResolution,
     };
 
     return createJsonResponse(payload, 200);
   } catch (error) {
+    if (error instanceof SourceResolutionError) {
+      return createJsonResponse({
+        success: false,
+        error: error.message,
+        sourceResolution: error.sourceResolution,
+      }, 400);
+    }
+
     const message = error instanceof Error && /Invalid URL|Only http\/https URLs are allowed|Blocked private network target/.test(error.message)
       ? error.message
       : 'Unable to analyze this source right now.';

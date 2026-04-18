@@ -38,6 +38,8 @@ const SmartPlayer = (): ReactElement => {
     analysisMessage,
     analysisSeverity,
     analysisDecision,
+    sourceStatusLabel,
+    sourceStatusTone,
     currentFormat,
     supportedFormats,
     isFullscreen,
@@ -95,6 +97,8 @@ const SmartPlayer = (): ReactElement => {
         intake={intake}
         currentFormat={currentFormat === 'unknown' ? detectedFormat : currentFormat}
         supportedFormats={supportedFormats}
+        sourceStatusLabel={sourceStatusLabel}
+        sourceStatusTone={sourceStatusTone}
         onChange={updateIntake}
         onApply={applySession}
         canApply={canApplySession}

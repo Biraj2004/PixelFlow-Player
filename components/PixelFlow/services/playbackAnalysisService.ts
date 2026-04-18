@@ -3,6 +3,61 @@ import { detectMediaType, detectMediaTypeFromContentType } from '../utils/mediaT
 
 const SUPPORTED_FORMATS: PlaybackAnalysisResult['supportedFormats'] = ['hls', 'dash', 'mp4', 'mkv'];
 
+type SourceResolutionPayload = {
+  provider?: 'direct' | 'terabox' | 'pixeldrain';
+  status?: 'none' | 'resolved' | 'auth_required';
+  label?: string;
+};
+
+const deriveSourceStatus = (sourceResolution?: SourceResolutionPayload): Pick<PlaybackAnalysisResult, 'sourceStatusLabel' | 'sourceStatusTone'> => {
+  if (!sourceResolution || sourceResolution.status === 'none') {
+    return {
+      sourceStatusLabel: '',
+      sourceStatusTone: 'info',
+    };
+  }
+
+  if (sourceResolution.label) {
+    return {
+      sourceStatusLabel: sourceResolution.label,
+      sourceStatusTone: sourceResolution.status === 'resolved' ? 'success' : 'warning',
+    };
+  }
+
+  if (sourceResolution.provider === 'terabox' && sourceResolution.status === 'resolved') {
+    return {
+      sourceStatusLabel: 'TeraBox link resolved',
+      sourceStatusTone: 'success',
+    };
+  }
+
+  if (sourceResolution.provider === 'terabox' && sourceResolution.status === 'auth_required') {
+    return {
+      sourceStatusLabel: 'TeraBox requires authenticated browser session',
+      sourceStatusTone: 'warning',
+    };
+  }
+
+  if (sourceResolution.provider === 'pixeldrain' && sourceResolution.status === 'resolved') {
+    return {
+      sourceStatusLabel: 'Pixeldrain link resolved',
+      sourceStatusTone: 'success',
+    };
+  }
+
+  if (sourceResolution.provider === 'pixeldrain' && sourceResolution.status === 'auth_required') {
+    return {
+      sourceStatusLabel: 'Pixeldrain requires authenticated browser session',
+      sourceStatusTone: 'warning',
+    };
+  }
+
+  return {
+    sourceStatusLabel: '',
+    sourceStatusTone: 'info',
+  };
+};
+
 const isHttpUrl = (value: string): boolean => /^https?:\/\//i.test(value);
 
 const buildAbsolutePlayableUrl = (playableUrl: string): string => {
@@ -22,10 +77,6 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
     body: JSON.stringify({ url }),
   });
 
-  if (!response.ok) {
-    return null;
-  }
-
   const payload = (await response.json()) as {
     success?: boolean;
     strategy?: 'direct' | 'proxy' | 'transcode' | 'error';
@@ -34,8 +85,35 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
       type?: PlaybackAnalysisResult['currentFormat'];
       contentType?: string;
     };
+    sourceResolution?: SourceResolutionPayload;
     error?: string;
   };
+
+  const sourceStatus = deriveSourceStatus(payload.sourceResolution);
+
+  if (!response.ok) {
+    const metadataType = payload.metadata?.type;
+    const typeFromContent = detectMediaTypeFromContentType(payload.metadata?.contentType ?? '');
+    const currentFormat = metadataType && metadataType !== 'unknown'
+      ? metadataType
+      : (typeFromContent !== 'unknown' ? typeFromContent : detectMediaType(url));
+
+    return {
+      shouldProceed: false,
+      playbackUrl: url,
+      decision: 'error',
+      severity: 'error',
+      message: payload.error || 'Analyze failed. Unable to determine safe playback strategy.',
+      sourceStatusLabel: sourceStatus.sourceStatusLabel,
+      sourceStatusTone: sourceStatus.sourceStatusTone,
+      currentFormat,
+      supportedFormats: SUPPORTED_FORMATS,
+    };
+  }
+
+  if (!payload) {
+    return null;
+  }
 
   const metadataType = payload.metadata?.type;
   const typeFromContent = detectMediaTypeFromContentType(payload.metadata?.contentType ?? '');
@@ -50,6 +128,8 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
       decision: 'error',
       severity: 'error',
       message: payload.error || 'Analyze failed. Unable to determine safe playback strategy.',
+      sourceStatusLabel: sourceStatus.sourceStatusLabel,
+      sourceStatusTone: sourceStatus.sourceStatusTone,
       currentFormat,
       supportedFormats: SUPPORTED_FORMATS,
     };
@@ -64,6 +144,8 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
       decision: 'direct',
       severity: 'success',
       message: 'Analysis complete: direct playback selected.',
+      sourceStatusLabel: sourceStatus.sourceStatusLabel,
+      sourceStatusTone: sourceStatus.sourceStatusTone,
       currentFormat,
       supportedFormats: SUPPORTED_FORMATS,
     };
@@ -76,6 +158,8 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
       decision: 'proxy',
       severity: 'warning',
       message: 'Analysis complete: proxy playback selected due to network/CORS constraints.',
+      sourceStatusLabel: sourceStatus.sourceStatusLabel,
+      sourceStatusTone: sourceStatus.sourceStatusTone,
       currentFormat,
       supportedFormats: SUPPORTED_FORMATS,
     };
@@ -88,6 +172,8 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
       decision: 'transcode',
       severity: 'warning',
       message: 'Analysis complete: transcoding path selected for codec compatibility.',
+      sourceStatusLabel: sourceStatus.sourceStatusLabel,
+      sourceStatusTone: sourceStatus.sourceStatusTone,
       currentFormat,
       supportedFormats: SUPPORTED_FORMATS,
     };
@@ -99,6 +185,8 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
     decision: 'error',
     severity: 'error',
     message: 'Analysis complete: stream marked non-playable.',
+    sourceStatusLabel: sourceStatus.sourceStatusLabel,
+    sourceStatusTone: sourceStatus.sourceStatusTone,
     currentFormat,
     supportedFormats: SUPPORTED_FORMATS,
   };
@@ -114,6 +202,8 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'error',
       severity: 'error',
       message: 'No URL provided for analysis.',
+      sourceStatusLabel: '',
+      sourceStatusTone: 'info',
       currentFormat: 'unknown',
       supportedFormats: SUPPORTED_FORMATS,
     };
@@ -126,6 +216,8 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'error',
       severity: 'error',
       message: 'Invalid URL. Please provide an http or https media link.',
+      sourceStatusLabel: '',
+      sourceStatusTone: 'info',
       currentFormat: 'unknown',
       supportedFormats: SUPPORTED_FORMATS,
     };
@@ -151,6 +243,8 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'error',
       severity: 'error',
       message: 'Analysis: unknown media format. Provide mp4, mkv, m3u8, or mpd.',
+      sourceStatusLabel: '',
+      sourceStatusTone: 'info',
       currentFormat: mediaType,
       supportedFormats: SUPPORTED_FORMATS,
     };
@@ -163,6 +257,8 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'transcode',
       severity: 'warning',
       message: 'Analysis: MKV detected. Playback will try fallback chain and may require transcoding.',
+      sourceStatusLabel: '',
+      sourceStatusTone: 'info',
       currentFormat: mediaType,
       supportedFormats: SUPPORTED_FORMATS,
     };
@@ -175,6 +271,8 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
       decision: 'proxy',
       severity: 'warning',
       message: 'Analysis: cross-origin source detected. Playback starts now and may require proxy fallback.',
+      sourceStatusLabel: '',
+      sourceStatusTone: 'info',
       currentFormat: mediaType,
       supportedFormats: SUPPORTED_FORMATS,
     };
@@ -186,6 +284,8 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
     decision: 'direct',
     severity: 'success',
     message: 'Analysis: source looks directly playable. Starting stream.',
+    sourceStatusLabel: '',
+    sourceStatusTone: 'info',
     currentFormat: mediaType,
     supportedFormats: SUPPORTED_FORMATS,
   };

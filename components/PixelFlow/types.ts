@@ -75,6 +75,8 @@ export interface PlaybackAnalysisResult {
   decision: AnalysisDecision;
   severity: AnalysisSeverity;
   message: string;
+  sourceStatusLabel: string;
+  sourceStatusTone: AnalysisSeverity;
   currentFormat: PlayerDiagnostics['mediaType'];
   supportedFormats: Array<PlayerDiagnostics['mediaType']>;
 }

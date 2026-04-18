@@ -17,7 +17,7 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "PixelFlow",
-  description: "Play anything. Stream everything.",
+  description: "Play anything. Stream everything. Now with smarter TeraBox link playback.",
 };
 
 const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {

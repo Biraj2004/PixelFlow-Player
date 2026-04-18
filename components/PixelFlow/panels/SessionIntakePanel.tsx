@@ -1,16 +1,35 @@
 import type { IntakeState } from '../utils/playlistInput';
 import type { MediaType } from '../utils/mediaType';
+import type { AnalysisSeverity } from '../types';
 
 type SessionIntakePanelProps = {
   intake: IntakeState;
   currentFormat: MediaType;
   supportedFormats: MediaType[];
+  sourceStatusLabel: string;
+  sourceStatusTone: AnalysisSeverity;
   onChange: (field: keyof IntakeState, value: string) => void;
   onApply: () => void;
   canApply: boolean;
 };
 
-const SessionIntakePanel = ({ intake, currentFormat, supportedFormats, onChange, onApply, canApply }: SessionIntakePanelProps) => {
+const statusToneClasses: Record<AnalysisSeverity, string> = {
+  success: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200',
+  info: 'border-sky-400/30 bg-sky-400/10 text-sky-200',
+  warning: 'border-amber-400/30 bg-amber-400/10 text-amber-200',
+  error: 'border-rose-400/30 bg-rose-400/10 text-rose-200',
+};
+
+const SessionIntakePanel = ({
+  intake,
+  currentFormat,
+  supportedFormats,
+  sourceStatusLabel,
+  sourceStatusTone,
+  onChange,
+  onApply,
+  canApply,
+}: SessionIntakePanelProps) => {
   return (
     <section className="rounded-xl border border-white/10 bg-surface-low p-5 md:p-6 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -19,6 +38,15 @@ const SessionIntakePanel = ({ intake, currentFormat, supportedFormats, onChange,
           Current format: {currentFormat}
         </span>
       </div>
+
+      {sourceStatusLabel ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] uppercase tracking-[0.16em] text-gray-400">Source status:</span>
+          <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider ${statusToneClasses[sourceStatusTone]}`}>
+            {sourceStatusLabel}
+          </span>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[11px] uppercase tracking-[0.16em] text-gray-400">Supported formats:</span>

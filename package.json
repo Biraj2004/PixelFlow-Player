@@ -6,6 +6,7 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
+    "test": "node --test --experimental-strip-types ./lib/**/*.test.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },

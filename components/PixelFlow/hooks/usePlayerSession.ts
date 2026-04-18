@@ -57,6 +57,8 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
   const [analysisMessage, setAnalysisMessage] = useState('');
   const [analysisSeverity, setAnalysisSeverity] = useState<AnalysisSeverity>('info');
   const [analysisDecision, setAnalysisDecision] = useState<AnalysisDecision>('direct');
+  const [sourceStatusLabel, setSourceStatusLabel] = useState('');
+  const [sourceStatusTone, setSourceStatusTone] = useState<AnalysisSeverity>('info');
   const [currentFormat, setCurrentFormat] = useState<PlayerDiagnostics['mediaType']>('unknown');
   const [supportedFormats, setSupportedFormats] = useState<Array<PlayerDiagnostics['mediaType']>>(['hls', 'dash', 'mp4', 'mkv']);
 
@@ -241,6 +243,8 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
     setAnalysisMessage(analysis.message);
     setAnalysisSeverity(analysis.severity);
     setAnalysisDecision(analysis.decision);
+    setSourceStatusLabel(analysis.sourceStatusLabel);
+    setSourceStatusTone(analysis.sourceStatusTone);
     setCurrentFormat(analysis.currentFormat);
     setSupportedFormats(analysis.supportedFormats);
     addLog(`Analysis -> ${analysis.decision}: ${analysis.message}`, analysis.severity === 'error' ? 'error' : 'info');
@@ -420,6 +424,8 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
     analysisMessage,
     analysisSeverity,
     analysisDecision,
+    sourceStatusLabel,
+    sourceStatusTone,
     currentFormat,
     supportedFormats,
     analytics,

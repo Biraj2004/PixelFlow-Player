@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { isManifestContent, rewriteManifest } from '@/lib/pixelflow-server/manifestRewrite';
 import { checkRateLimit, getClientAddress } from '@/lib/pixelflow-server/security';
+import { resolvePlayableSource } from '@/lib/pixelflow-server/sourceResolver';
 import { assertSafeUrl } from '@/lib/pixelflow-server/urlValidation';
 
 export const runtime = 'nodejs';
@@ -41,7 +42,8 @@ export const GET = async (request: NextRequest): Promise<Response> => {
   }
 
   try {
-    const safeUrl = await assertSafeUrl(rawUrl);
+    const resolvedSource = await resolvePlayableSource(rawUrl);
+    const safeUrl = await assertSafeUrl(resolvedSource.url);
     const forwardHeaders = new Headers();
 
     ALLOWED_FORWARD_HEADERS.forEach((name) => {
