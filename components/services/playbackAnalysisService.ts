@@ -9,24 +9,42 @@ type SourceResolutionPayload = {
   label?: string;
 };
 
-const getAudioCompatibilityMessage = (audioCodec?: string): string => {
-  const normalized = (audioCodec ?? '').toLowerCase();
+const normalizeAudioCodec = (audioCodec?: string): string => (audioCodec ?? '').trim().toLowerCase();
 
-  if (normalized === 'eac3' || normalized === 'ec-3' || normalized === 'ac3' || normalized === 'ac-3') {
-    return 'EAC3/DD 5.1 audio is not supported in this player. Only AAC 2.0 audio is supported for reliable playback.';
+const getAudioCodecLabel = (audioCodec?: string): string => {
+  const normalized = normalizeAudioCodec(audioCodec);
+
+  if (normalized === 'aac') {
+    return 'AAC 2.0';
   }
 
-  return '';
+  if (normalized === 'eac3' || normalized === 'ec-3') {
+    return 'EAC3/EC-3 (Dolby Digital Plus 5.1)';
+  }
+
+  if (normalized === 'ac3' || normalized === 'ac-3') {
+    return 'AC-3 (Dolby Digital 5.1)';
+  }
+
+  return audioCodec?.trim() || 'Unknown';
+};
+
+const isSupportedAudioCodec = (audioCodec?: string): boolean => normalizeAudioCodec(audioCodec) === 'aac';
+
+const getAudioCompatibilityMessage = (audioCodec?: string): string => {
+  if (isSupportedAudioCodec(audioCodec) || !audioCodec) {
+    return '';
+  }
+
+  return `Detected audio codec ${getAudioCodecLabel(audioCodec)} is not supported in this player. Only AAC 2.0 audio is supported for reliable playback.`;
 };
 
 const getAudioSupportNotice = (audioCodec?: string): string => {
-  const normalized = (audioCodec ?? '').toLowerCase();
-
-  if (normalized === 'eac3' || normalized === 'ec-3' || normalized === 'ac3' || normalized === 'ac-3') {
-    return 'EAC3/DD 5.1 is not supported. Only AAC 2.0 is supported.';
+  if (!audioCodec || isSupportedAudioCodec(audioCodec)) {
+    return 'AAC 2.0 is supported.';
   }
 
-  return 'AAC 2.0 is supported.';
+  return `Unsupported codec: ${getAudioCodecLabel(audioCodec)}. Supported codec: AAC 2.0.`;
 };
 
 const deriveSourceStatus = (sourceResolution?: SourceResolutionPayload): Pick<PlaybackAnalysisResult, 'sourceStatusLabel' | 'sourceStatusTone'> => {
@@ -124,6 +142,7 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
   if (!response.ok) {
     const metadataType = payload.metadata?.type;
     const typeFromContent = detectMediaTypeFromContentType(payload.metadata?.contentType ?? '');
+    const audioSupportNotice = getAudioSupportNotice(payload.metadata?.audioCodec);
     const currentFormat = metadataType && metadataType !== 'unknown'
       ? metadataType
       : (typeFromContent !== 'unknown' ? typeFromContent : detectMediaType(url));
@@ -134,6 +153,7 @@ const tryBackendAnalyze = async (url: string): Promise<PlaybackAnalysisResult | 
       decision: 'error',
       severity: 'error',
       message: payload.error || 'Analyze failed. Unable to determine safe playback strategy.',
+      audioSupportNotice,
       sourceStatusLabel: sourceStatus.sourceStatusLabel,
       sourceStatusTone: sourceStatus.sourceStatusTone,
       currentFormat,

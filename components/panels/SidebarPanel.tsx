@@ -13,7 +13,6 @@ type SidebarPanelProps = {
   analysisDecision: AnalysisDecision;
   analysisSeverity: AnalysisSeverity;
   analysisMessage: string;
-  audioSupportNotice: string;
   onChooseStream: (stream: StreamOption) => Promise<void>;
   onChooseAudio: (id: string) => void;
   onChooseSubtitle: (id: string) => void;
@@ -68,7 +67,6 @@ const SidebarPanel = ({
   analysisDecision,
   analysisSeverity,
   analysisMessage,
-  audioSupportNotice,
   onChooseStream,
   onChooseAudio,
   onChooseSubtitle,
@@ -110,9 +108,6 @@ const SidebarPanel = ({
         <div className="text-xs text-gray-300">Type: {mediaType || 'unknown'}</div>
         <div className="text-xs text-gray-300">CORS Risk: {corsRisk}</div>
         <div className="text-xs text-gray-300">Decision: {analysisDecision}</div>
-        <div className={clsx('text-xs', /not supported/i.test(audioSupportNotice) ? 'text-yellow-300' : 'text-gray-300')}>
-          Audio Support: {audioSupportNotice || 'AAC 2.0 is supported.'}
-        </div>
         <div
           className={clsx(
             'text-xs break-words',

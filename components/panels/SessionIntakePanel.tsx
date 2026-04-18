@@ -8,6 +8,7 @@ type SessionIntakePanelProps = {
   supportedFormats: MediaType[];
   sourceStatusLabel: string;
   sourceStatusTone: AnalysisSeverity;
+  audioSupportNotice: string;
   onChange: (field: keyof IntakeState, value: string) => void;
   onApply: () => void;
   onClear: () => void;
@@ -22,18 +23,25 @@ const statusToneClasses: Record<AnalysisSeverity, string> = {
   error: 'border-rose-400/30 bg-rose-400/10 text-rose-200',
 };
 
+const UNSUPPORTED_AUDIO_CODECS_LABEL = 'Not supported: EAC3/EC-3 (Dolby Digital Plus 5.1), AC-3 (Dolby Digital 5.1).';
+
 const SessionIntakePanel = ({
   intake,
   currentFormat,
   supportedFormats,
   sourceStatusLabel,
   sourceStatusTone,
+  audioSupportNotice,
   onChange,
   onApply,
   onClear,
   canApply,
   canClear,
 }: SessionIntakePanelProps) => {
+  const audioSupportClass = /unsupported/i.test(audioSupportNotice)
+    ? 'border-amber-400/30 bg-amber-400/10 text-amber-200'
+    : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+
   return (
     <section className="rounded-xl border border-white/10 bg-surface-low p-5 md:p-6 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -51,6 +59,14 @@ const SessionIntakePanel = ({
           </span>
         </div>
       ) : null}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[11px] uppercase tracking-[0.16em] text-gray-400">Audio support:</span>
+        <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold tracking-wide ${audioSupportClass}`}>
+          {audioSupportNotice || 'AAC 2.0 is supported.'}
+        </span>
+      </div>
+      <p className="text-[11px] text-gray-400">{UNSUPPORTED_AUDIO_CODECS_LABEL}</p>
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-[11px] uppercase tracking-[0.16em] text-gray-400">Supported formats:</span>

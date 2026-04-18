@@ -8,6 +8,7 @@
     ],
     "allowJs": false,
     "skipLibCheck": true,
+    "ignoreDeprecations": "5.0",
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,

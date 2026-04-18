@@ -119,6 +119,7 @@ const SmartPlayer = (): ReactElement => {
         supportedFormats={supportedFormats}
         sourceStatusLabel={sourceStatusLabel}
         sourceStatusTone={sourceStatusTone}
+        audioSupportNotice={audioSupportNotice}
         onChange={updateIntake}
         onApply={applySession}
         onClear={clearSessionInput}
@@ -158,7 +159,6 @@ const SmartPlayer = (): ReactElement => {
             analysisDecision={analysisDecision}
             analysisSeverity={analysisSeverity}
             analysisMessage={analysisMessage}
-            audioSupportNotice={audioSupportNotice}
             onChooseStream={chooseStream}
             onChooseAudio={chooseAudioTrack}
             onChooseSubtitle={chooseSubtitleTrack}
