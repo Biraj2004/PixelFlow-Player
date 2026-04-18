@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+}
+
+:root {
+  --background: #0b0e11;
+  --foreground: #f8f9fe;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-manrope), sans-serif;
+  overflow-x: hidden;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Custom Scrollbar for the Cyber-Grid look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #101417; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #282d31; 
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #99f7ff; 
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .bg-grid-pattern {
+    background-image: linear-gradient(#282d31 1px, transparent 1px),
+    linear-gradient(90deg, #282d31 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center center;
+    opacity: 0.05;
+  }
+}
+
+@layer components {
+  .pf-page {
+    @apply min-h-screen;
+  }
+
+  .pf-title {
+    @apply font-display text-2xl font-bold tracking-[0.02em] text-foreground md:text-3xl;
+  }
+
+  .pf-section-title {
+    @apply font-display text-base font-semibold tracking-[0.08em] uppercase text-foreground;
+  }
+
+  .pf-eyebrow {
+    @apply font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400;
+  }
+
+  .pf-body {
+    @apply text-sm font-normal text-gray-300;
+  }
+
+  .pf-caption {
+    @apply text-xs font-normal text-gray-400;
+  }
+
+  .pf-panel {
+    @apply rounded-lg border border-white/10 bg-surface-low;
+  }
+
+  .pf-chip {
+    @apply rounded border border-white/15 bg-surface-container px-2 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-gray-300;
+  }
+
+  .pf-input {
+    @apply w-full rounded-lg border border-white/15 bg-surface-container px-3 py-2 text-sm text-gray-200 outline-none transition-colors placeholder:text-gray-500 focus:border-primary;
+  }
+
+  .pf-btn-primary {
+    @apply inline-flex items-center rounded border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .pf-btn-solid {
+    @apply inline-flex items-center rounded bg-gradient-to-br from-primary to-primary-container px-5 py-2 text-sm font-semibold text-black transition-opacity disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .pf-btn-ghost {
+    @apply inline-flex items-center rounded border border-white/20 px-2 py-1.5 text-sm text-gray-300 transition-colors hover:text-primary disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}
