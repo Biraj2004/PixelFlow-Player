@@ -1,10 +1,10 @@
 'use client';
 
 import { type ReactElement, useCallback, useMemo, useState } from 'react';
-import { usePlayerSession } from './hooks/usePlayerSession';
+import { usePlayerSession } from '../hooks/usePlayerSession';
 import type { StreamOption } from './types';
-import { detectMediaType } from './utils/mediaType';
-import { buildPlaylistFromIntake, parseIntake, type IntakeState } from './utils/playlistInput';
+import { detectMediaType } from '../utils/mediaType';
+import { buildPlaylistFromIntake, parseIntake, type IntakeState } from '../utils/playlistInput';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import PlaybackPanel from './panels/PlaybackPanel';
 import SessionIntakePanel from './panels/SessionIntakePanel';

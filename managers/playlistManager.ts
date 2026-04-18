@@ -1,4 +1,4 @@
-import type { StreamOption } from '../types';
+import type { StreamOption } from '../components/types';
 
 export class PlaylistManager {
   private playlist: StreamOption[];

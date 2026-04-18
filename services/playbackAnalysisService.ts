@@ -1,4 +1,4 @@
-import type { PlaybackAnalysisResult } from '../types';
+import type { PlaybackAnalysisResult } from '../components/types';
 import { detectMediaType, detectMediaTypeFromContentType } from '../utils/mediaType';
 
 const SUPPORTED_FORMATS: PlaybackAnalysisResult['supportedFormats'] = ['hls', 'dash', 'mp4', 'mkv'];

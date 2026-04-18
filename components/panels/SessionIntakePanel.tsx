@@ -1,5 +1,5 @@
-import type { IntakeState } from '../utils/playlistInput';
-import type { MediaType } from '../utils/mediaType';
+import type { IntakeState } from '../../utils/playlistInput';
+import type { MediaType } from '../../utils/mediaType';
 import type { AnalysisSeverity } from '../types';
 
 type SessionIntakePanelProps = {

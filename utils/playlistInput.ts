@@ -1,4 +1,4 @@
-import type { StreamOption } from '../types';
+import type { StreamOption } from '../components/types';
 import { detectMediaType } from './mediaType';
 
 export type IntakeState = {

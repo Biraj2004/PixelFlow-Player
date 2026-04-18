@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { PIXELFLOW_ANALYTICS_STORAGE_KEY } from './utils/analyticsStorage';
+import { PIXELFLOW_ANALYTICS_STORAGE_KEY } from '../utils/analyticsStorage';
 import type { PlayerAnalyticsSnapshot, PlayerDiagnostics, PlayerLog, Strategy } from './types';
 
 type AnalyticsSnapshot = {

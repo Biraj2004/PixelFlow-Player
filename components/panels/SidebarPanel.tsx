@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import type { AnalysisDecision, AnalysisSeverity, PlayerDiagnostics, SelectableTrack, StreamOption } from '../types';
-import type { MediaType } from '../utils/mediaType';
+import type { MediaType } from '../../utils/mediaType';
 
 type SidebarPanelProps = {
   playlist: StreamOption[];

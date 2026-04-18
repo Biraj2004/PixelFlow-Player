@@ -1,4 +1,4 @@
-import type { SelectableTrack } from '../types';
+import type { SelectableTrack } from '../components/types';
 
 const readNativeAudioTracks = (videoElement: HTMLVideoElement): SelectableTrack[] => {
   const nativeTracks = (videoElement as HTMLVideoElement & {

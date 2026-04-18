@@ -4,7 +4,7 @@ import { PlaylistManager } from '../managers/playlistManager';
 import { attachExternalSubtitleTrack, getSubtitleTracks, selectSubtitleTrack } from '../managers/subtitleManager';
 import { buildAnalyticsSnapshot, createDiagnostics } from '../services/analyticsService';
 import { analyzePlaybackSource } from '../services/playbackAnalysisService';
-import { PlayerController } from '../playerController';
+import { PlayerController } from '../components/playerController';
 import { PIXELFLOW_ANALYTICS_STORAGE_KEY } from '../utils/analyticsStorage';
 import { redactUrl } from '@/lib/security';
 import type {
@@ -18,7 +18,7 @@ import type {
   SelectableTrack,
   StreamOption,
   Strategy,
-} from '../types';
+} from '../components/types';
 
 const INITIAL_ANALYTICS: PlayerAnalyticsSnapshot = {
   diagnostics: null,

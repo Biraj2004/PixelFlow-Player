@@ -1,4 +1,4 @@
-import type { SelectableTrack } from '../types';
+import type { SelectableTrack } from '../components/types';
 
 export const getSubtitleTracks = (videoElement: HTMLVideoElement): SelectableTrack[] => {
   const tracks = Array.from(videoElement.textTracks ?? []);

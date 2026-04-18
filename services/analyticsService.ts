@@ -1,4 +1,4 @@
-import type { PlayerAnalyticsSnapshot, PlayerDiagnostics, Strategy } from '../types';
+import type { PlayerAnalyticsSnapshot, PlayerDiagnostics, Strategy } from '../components/types';
 import { detectMediaType } from '../utils/mediaType';
 import { redactUrl } from '@/lib/security';
 
