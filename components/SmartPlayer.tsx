@@ -181,7 +181,7 @@ const SmartPlayer = (): ReactElement => {
         </button>
       </section>
 
-      {showAnalytics ? <AnalyticsDashboard onClose={() => setShowAnalytics(false)} /> : null}
+      {showAnalytics ? <AnalyticsDashboard /> : null}
     </div>
   );
 };

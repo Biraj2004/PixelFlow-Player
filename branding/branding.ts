@@ -23,8 +23,8 @@ export const BRANDING: BrandConfig = {
   pageTitle: 'PixelFlow Player',
   productLabel: 'Link Intelligent Player',
   tagline: 'Smooth playback for Links.',
-  shortDescription: 'Smart link playback for TeraBox and Pixeldrain.',
-  description: 'Paste your share URL. PixelFlow resolves it to a playable stream when available and shows clear source status when authentication is required.',
+  shortDescription: 'Play any streamable link with TeraBox (best-effort) and Pixeldrain support.',
+  description: 'Paste a streamable URL. PixelFlow plays broadly compatible links and includes dedicated support for Pixeldrain and TeraBox (best-effort, may fail on protected sources), with clear source status feedback.',
   ctaLabel: 'Link Play',
   projectUrl: 'https://github.com/Biraj2004/PixelFlow-Player',
   logo: {

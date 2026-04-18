@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={clsx(manrope.variable, spaceGrotesk.variable, "antialiased bg-[#0b0e11] text-[#f8f9fe]")}>
+      <body suppressHydrationWarning className={clsx(manrope.variable, spaceGrotesk.variable, 'antialiased bg-background text-foreground')}>
         <div className="fixed inset-0 pointer-events-none z-[-1] opacity-5 bg-[linear-gradient(#282d31_1px,transparent_1px),linear-gradient(90deg,#282d31_1px,transparent_1px)] bg-[size:40px_40px]"></div>
         {children}
       </body>

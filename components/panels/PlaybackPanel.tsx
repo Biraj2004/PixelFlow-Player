@@ -309,7 +309,7 @@ const PlaybackPanel = ({
                 disabled={!canUsePlaybackControls}
                 aria-label={primaryActionLabel}
                 title={primaryActionLabel}
-                className="inline-flex items-center gap-2 rounded border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 items-center gap-2 rounded border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {showPauseAction ? <Pause size={16} /> : <Play size={16} />}
                 <span className="hidden sm:inline">{primaryActionLabel}</span>
@@ -320,7 +320,7 @@ const PlaybackPanel = ({
                 disabled={!canUsePlaybackControls}
                 aria-label="Previous source"
                 title="Previous source"
-                className="text-gray-200 hover:text-white transition-colors p-1.5 rounded border border-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded border border-white/20 p-2 text-gray-200 transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Rewind size={16} />
               </button>
@@ -330,7 +330,7 @@ const PlaybackPanel = ({
                 disabled={!canUsePlaybackControls}
                 aria-label="Next source"
                 title="Next source"
-                className="text-gray-200 hover:text-white transition-colors p-1.5 rounded border border-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded border border-white/20 p-2 text-gray-200 transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FastForward size={16} />
               </button>
@@ -341,7 +341,7 @@ const PlaybackPanel = ({
                 aria-label={isMuted ? 'Unmute' : 'Mute'}
                 title={isMuted ? 'Unmute' : 'Mute'}
                 className={clsx(
-                  'transition-colors p-1.5 rounded border border-white/20 disabled:cursor-not-allowed disabled:opacity-50',
+                  'inline-flex min-h-11 min-w-11 items-center justify-center rounded border border-white/20 p-2 transition-colors focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50',
                   isMuted ? 'text-gray-300' : 'text-primary',
                 )}
               >
@@ -354,7 +354,7 @@ const PlaybackPanel = ({
               disabled={!hasActiveSource}
               aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
               title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-              className="text-gray-300 hover:text-primary transition-colors p-1.5 rounded border border-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded border border-white/20 p-2 text-gray-300 transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </button>

@@ -80,11 +80,12 @@ const SessionIntakePanel = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <label className="space-y-1 md:col-span-2">
           <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400">Video/Playlist URL(s) + Optional Subtitle URL</span>
-          <input
+          <textarea
             value={intake.sourceInput}
             onChange={(event) => onChange('sourceInput', event.target.value)}
             placeholder="Paste link here..."
-            className="w-full rounded-lg border border-white/15 bg-surface-container px-3 py-2 text-sm text-gray-200 outline-none placeholder:text-gray-300 focus:border-primary"
+            rows={3}
+            className="w-full rounded-lg border border-white/15 bg-surface-container px-3 py-2 text-sm text-gray-200 outline-none placeholder:text-gray-300 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-low resize-y"
           />
           <p className="text-[11px] text-gray-500">Supports single URL, comma/newline separated URLs. Add one .vtt or .srt URL in the same box to auto-attach external subtitles.</p>
         </label>
@@ -95,7 +96,7 @@ const SessionIntakePanel = ({
           type="button"
           onClick={onApply}
           disabled={!canApply}
-          className="rounded bg-gradient-to-br from-primary to-primary-container px-5 py-2 text-sm font-bold tracking-wide text-black disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded bg-gradient-to-br from-primary to-primary-container px-5 py-2 text-sm font-bold tracking-wide text-black focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-low disabled:cursor-not-allowed disabled:opacity-50"
         >
           Apply Session
         </button>
@@ -104,7 +105,7 @@ const SessionIntakePanel = ({
           type="button"
           onClick={onClear}
           disabled={!canClear}
-          className="rounded border border-white/20 bg-transparent px-4 py-2 text-sm font-semibold tracking-wide text-gray-200 transition-colors hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded border border-white/20 bg-transparent px-4 py-2 text-sm font-semibold tracking-wide text-gray-200 transition-colors hover:border-primary/40 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/80 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-low disabled:cursor-not-allowed disabled:opacity-40"
         >
           Clear Link
         </button>

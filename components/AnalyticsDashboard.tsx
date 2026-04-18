@@ -49,11 +49,7 @@ const getLogTone = (type: PlayerLog['type']): string => {
   return 'text-gray-200';
 };
 
-type AnalyticsDashboardProps = {
-  onClose?: () => void;
-};
-
-const AnalyticsDashboard = ({ onClose }: AnalyticsDashboardProps) => {
+const AnalyticsDashboard = () => {
   const [snapshot, setSnapshot] = useState<AnalyticsSnapshot>(emptySnapshot);
   const [nowTs, setNowTs] = useState<number>(() => Date.now());
 
@@ -140,25 +136,16 @@ const AnalyticsDashboard = ({ onClose }: AnalyticsDashboardProps) => {
     <section className="px-1 py-1">
       <section className="mx-auto max-w-6xl space-y-5">
         <div className="flex items-center justify-end gap-4 px-1">
-          <span className="text-xs text-gray-500">{updatedLabel}</span>
-          {onClose ? (
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-sm font-semibold text-gray-200 underline decoration-primary/40 underline-offset-4 hover:text-primary"
-            >
-              Close
-            </button>
-          ) : null}
+          <span className="text-xs text-gray-400">{updatedLabel}</span>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {cards.map((card) => (
             <div key={card.label} className="rounded-xl border border-white/10 bg-surface-low/80 p-4 transition-colors hover:border-primary/25">
-              <div className="text-[11px] uppercase tracking-[0.16em] text-gray-500">{card.label}</div>
+              <div className="text-[11px] uppercase tracking-[0.16em] text-gray-400">{card.label}</div>
               <div className="mt-1 flex items-baseline gap-1">
                 <span className="font-display text-3xl font-bold leading-none text-foreground">{card.value}</span>
-                {card.unit ? <span className="text-xs uppercase tracking-[0.14em] text-gray-500">{card.unit}</span> : null}
+                {card.unit ? <span className="text-xs uppercase tracking-[0.14em] text-gray-400">{card.unit}</span> : null}
               </div>
             </div>
           ))}
@@ -179,13 +166,13 @@ const AnalyticsDashboard = ({ onClose }: AnalyticsDashboardProps) => {
         <section className="overflow-hidden rounded-xl border border-white/10 bg-surface-low">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <span className="text-xs font-display uppercase tracking-[0.16em] text-gray-400">Session Logs</span>
-            <span className="text-[11px] uppercase tracking-[0.14em] text-gray-500">{snapshot.logs.length} entries</span>
+            <span className="text-[11px] uppercase tracking-[0.14em] text-gray-400">{snapshot.logs.length} entries</span>
           </div>
           <div className="max-h-[420px] space-y-2 overflow-y-auto p-4 font-mono text-xs">
-            {snapshot.logs.length === 0 && <p className="text-gray-500">No logs captured yet. Start playback to begin analytics capture.</p>}
+            {snapshot.logs.length === 0 && <p className="text-gray-400">No logs captured yet. Start playback to begin analytics capture.</p>}
             {snapshot.logs.map((log, index) => (
               <div key={`${log.time}-${log.msg}-${index}`} className={`flex gap-2 rounded border border-white/5 bg-black/10 px-3 py-2 ${getLogTone(log.type)}`}>
-                <span className="text-gray-500">[{log.time}]</span>
+                <span className="text-gray-400">[{log.time}]</span>
                 <span>{log.msg}</span>
               </div>
             ))}

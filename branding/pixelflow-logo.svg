@@ -1,0 +1,7 @@
+<svg width="160" height="160" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">PixelFlow Logo</title>
+  <desc id="desc">Rounded square icon with PixelFlow chevron mark</desc>
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="#0b0e11" stroke="#99f7ff" stroke-opacity="0.4"/>
+  <path d="M12 18h24l-8 8h-9l5 4H12v-4l5-4-5-4z" fill="#99f7ff"/>
+  <circle cx="35" cy="14" r="3" fill="#ff59e3"/>
+</svg>
