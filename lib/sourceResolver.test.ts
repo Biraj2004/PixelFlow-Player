@@ -31,6 +31,20 @@ test('resolvePixeldrainSource converts /u/:id share links to API download links'
   assert.equal(result?.sourceResolution.status, 'resolved');
 });
 
+test('resolvePixeldrainSource converts /d/:id links to API download links', () => {
+  const result = resolvePixeldrainSource('https://pixeldrain.com/d/AbC123xY');
+  assert.equal(result?.url, 'https://pixeldrain.com/api/file/AbC123xY?download');
+  assert.equal(result?.sourceResolution.provider, 'pixeldrain');
+  assert.equal(result?.sourceResolution.status, 'resolved');
+});
+
+test('resolvePixeldrainSource accepts subdomains and keeps direct api file links', () => {
+  const result = resolvePixeldrainSource('https://www.pixeldrain.com/api/file/AbC123xY');
+  assert.equal(result?.url, 'https://www.pixeldrain.com/api/file/AbC123xY?download');
+  assert.equal(result?.sourceResolution.provider, 'pixeldrain');
+  assert.equal(result?.sourceResolution.status, 'resolved');
+});
+
 test('buildSourceStatusLabel returns dedicated terabox auth required message', () => {
   const label = buildSourceStatusLabel({
     provider: 'terabox',

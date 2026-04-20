@@ -11,7 +11,7 @@ const TERABOX_HOST_MARKERS = [
 
 const MEDIA_EXTENSIONS = ['.m3u8', '.mpd', '.mp4', '.mkv'] as const;
 
-const PIXELDRAIN_HOST_MARKERS = ['pixeldrain.com', 'www.pixeldrain.com'] as const;
+const PIXELDRAIN_HOST_MARKERS = ['pixeldrain.com'] as const;
 
 type ResolvePlayableSourceResult = {
   url: string;
@@ -47,7 +47,7 @@ export const isPixeldrainUrl = (rawUrl: string): boolean => {
   try {
     const parsed = new URL(rawUrl);
     const host = parsed.hostname.toLowerCase();
-    return PIXELDRAIN_HOST_MARKERS.some((marker) => host === marker);
+    return PIXELDRAIN_HOST_MARKERS.some((marker) => host === marker || host.endsWith(`.${marker}`));
   } catch {
     return false;
   }
@@ -139,7 +139,7 @@ export const resolvePixeldrainSource = (rawUrl: string): ResolvePlayableSourceRe
   const parsed = new URL(rawUrl);
   const normalizedPath = parsed.pathname.replace(/\/$/, '');
 
-  const sharedFileMatch = normalizedPath.match(/^\/u\/([a-zA-Z0-9_-]+)$/);
+  const sharedFileMatch = normalizedPath.match(/^\/(?:u|d)\/([a-zA-Z0-9_-]+)$/);
   if (sharedFileMatch) {
     const fileId = sharedFileMatch[1];
     return {
