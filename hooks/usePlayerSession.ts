@@ -154,6 +154,8 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
 
     videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
     videoElement.addEventListener('emptied', handleTrackMutation);
+    videoElement.addEventListener('canplay', handleTrackMutation);
+    videoElement.addEventListener('playing', handleTrackMutation);
     textTrackList.addEventListener?.('addtrack', handleTrackMutation as EventListener);
     textTrackList.addEventListener?.('removetrack', handleTrackMutation as EventListener);
     textTrackList.addEventListener?.('change', handleTrackMutation as EventListener);
@@ -164,6 +166,8 @@ export const usePlayerSession = ({ playlist, initialUrl, externalSubtitleUrl }: 
     return () => {
       videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
       videoElement.removeEventListener('emptied', handleTrackMutation);
+      videoElement.removeEventListener('canplay', handleTrackMutation);
+      videoElement.removeEventListener('playing', handleTrackMutation);
       textTrackList.removeEventListener?.('addtrack', handleTrackMutation as EventListener);
       textTrackList.removeEventListener?.('removetrack', handleTrackMutation as EventListener);
       textTrackList.removeEventListener?.('change', handleTrackMutation as EventListener);

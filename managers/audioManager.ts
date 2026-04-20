@@ -17,8 +17,51 @@ const readNativeAudioTracks = (videoElement: HTMLVideoElement): SelectableTrack[
   }));
 };
 
+const hasAudiblePrimaryTrack = (videoElement: HTMLVideoElement): boolean => {
+  const media = videoElement as HTMLVideoElement & {
+    mozHasAudio?: boolean;
+    webkitAudioDecodedByteCount?: number;
+    captureStream?: () => MediaStream;
+  };
+
+  if (media.mozHasAudio === true) {
+    return true;
+  }
+
+  if (typeof media.webkitAudioDecodedByteCount === 'number' && media.webkitAudioDecodedByteCount > 0) {
+    return true;
+  }
+
+  if (typeof media.captureStream === 'function') {
+    try {
+      const stream = media.captureStream();
+      if (stream.getAudioTracks().length > 0) {
+        return true;
+      }
+    } catch {
+      // Ignore capture failures and continue with conservative fallback.
+    }
+  }
+
+  return false;
+};
+
 export const getAudioTracks = (videoElement: HTMLVideoElement): SelectableTrack[] => {
-  return readNativeAudioTracks(videoElement);
+  const nativeTracks = readNativeAudioTracks(videoElement);
+  if (nativeTracks.length > 0) {
+    return nativeTracks;
+  }
+
+  if (hasAudiblePrimaryTrack(videoElement)) {
+    return [{
+      id: 'primary',
+      label: 'Primary Audio',
+      language: 'und',
+      enabled: true,
+    }];
+  }
+
+  return [];
 };
 
 export const selectAudioTrack = (videoElement: HTMLVideoElement, id: string): void => {
