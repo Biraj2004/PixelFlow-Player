@@ -19,6 +19,18 @@ test('extractPlayableFromTeraboxHtml extracts plain media url', () => {
   assert.equal(result, 'https://media.teraboxcdn.com/stream/master.m3u8?auth=ok');
 });
 
+test('extractPlayableFromTeraboxHtml extracts media url from single-quoted payload', () => {
+  const html = "<script>window.STATE={'downloadLink':'https:\\/\\/d.teraboxcdn.com\\/video\\/demo.mp4?token=abc'}</script>";
+  const result = extractPlayableFromTeraboxHtml(html);
+  assert.equal(result, 'https://d.teraboxcdn.com/video/demo.mp4?token=abc');
+});
+
+test('extractPlayableFromTeraboxHtml extracts protocol-relative media urls', () => {
+  const html = '<script>window.__DATA__={"playUrl":"\\/\\/d.teraboxcdn.com\\/stream\\/master.m3u8?auth=ok"}</script>';
+  const result = extractPlayableFromTeraboxHtml(html);
+  assert.equal(result, 'https://d.teraboxcdn.com/stream/master.m3u8?auth=ok');
+});
+
 test('isTeraBoxUrl identifies terabox links', () => {
   assert.equal(isTeraBoxUrl('https://www.terabox.com/s/abc123'), true);
   assert.equal(isTeraBoxUrl('https://example.com/video.mp4'), false);

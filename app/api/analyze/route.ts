@@ -51,12 +51,29 @@ export const POST = async (request: NextRequest): Promise<NextResponse<AnalyzeSu
 	}
 
 	try {
-		const resolvedSource = await resolvePlayableSource(url);
+		let resolvedSource: { url: string; sourceResolution: AnalyzeSuccess['sourceResolution'] };
+
+		try {
+			resolvedSource = await resolvePlayableSource(url);
+		} catch (error) {
+			if (error instanceof SourceResolutionError && error.sourceResolution.provider === 'terabox') {
+				resolvedSource = {
+					url,
+					sourceResolution: error.sourceResolution,
+				};
+			} else {
+				throw error;
+			}
+		}
+
 		const safeUrl = await assertSafeUrl(resolvedSource.url);
 		const metadata = await analyzeStream(safeUrl);
 		const selectedStrategy = pickStrategy({ metadata, forceProxy });
 		// Transcoding is not available in this deployment tier; proxy is the safe fallback.
-		const strategy = forceProxy || resolvedSource.sourceResolution.provider === 'pixeldrain' || selectedStrategy === 'transcode'
+		const strategy = forceProxy
+			|| resolvedSource.sourceResolution.provider === 'pixeldrain'
+			|| resolvedSource.sourceResolution.status === 'auth_required'
+			|| selectedStrategy === 'transcode'
 			? 'proxy'
 			: selectedStrategy;
 		const playableUrl = strategy === 'proxy' ? `/api/stream?url=${encodeURIComponent(safeUrl)}` : safeUrl;

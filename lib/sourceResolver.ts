@@ -97,7 +97,9 @@ export const extractPlayableFromTeraboxHtml = (html: string): string | null => {
   const patterns = [
     /"dlink"\s*:\s*"([^"]+)"/i,
     /"downloadLink"\s*:\s*"([^"]+)"/i,
+    /['"](?:dlink|downloadLink|playUrl|play_url|videoUrl|video_url)['"]\s*:\s*['"]([^'"]+)['"]/i,
     /(https?:\/\/[^"'<\\\s]+\.(?:m3u8|mpd|mp4|mkv)(?:\?[^"'<\\\s]*)?)/i,
+    /(\/\/[^"'<\\\s]+\.(?:m3u8|mpd|mp4|mkv)(?:\?[^"'<\\\s]*)?)/i,
   ] as const;
 
   for (const pattern of patterns) {
@@ -128,7 +130,11 @@ export const extractPlayableFromTeraboxHtml = (html: string): string | null => {
 
 const isLikelyMediaContentType = (contentType: string): boolean => {
   const value = contentType.toLowerCase();
-  return value.includes('video/') || value.includes('application/vnd.apple.mpegurl') || value.includes('application/x-mpegurl') || value.includes('application/dash+xml');
+  return value.includes('video/')
+    || value.includes('application/vnd.apple.mpegurl')
+    || value.includes('application/x-mpegurl')
+    || value.includes('application/dash+xml')
+    || value.includes('application/octet-stream');
 };
 
 export const resolvePixeldrainSource = (rawUrl: string): ResolvePlayableSourceResult | null => {
@@ -219,9 +225,18 @@ export const resolvePlayableSource = async (rawUrl: string): Promise<ResolvePlay
   });
 
   const contentType = response.headers.get('content-type') ?? '';
+  const contentDisposition = response.headers.get('content-disposition') ?? '';
   const finalUrl = response.url || parsed.toString();
+  const finalUrlLooksLikeMedia = (() => {
+    try {
+      return looksLikeDirectMediaPath(new URL(finalUrl).pathname);
+    } catch {
+      return false;
+    }
+  })();
+  const dispositionLooksLikeMedia = /\.(m3u8|mpd|mp4|mkv)(?:"|;|$)/i.test(contentDisposition);
 
-  if (response.ok && isLikelyMediaContentType(contentType)) {
+  if (response.ok && (isLikelyMediaContentType(contentType) || finalUrlLooksLikeMedia || dispositionLooksLikeMedia)) {
     return {
       url: finalUrl,
       sourceResolution: {

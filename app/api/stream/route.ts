@@ -1,7 +1,11 @@
 import { NextRequest } from 'next/server';
 import { isManifestContent, rewriteManifest } from '@/lib/manifestRewrite';
 import { checkRateLimit, getClientAddress } from '@/lib/security';
-import { resolvePlayableSource } from '@/lib/sourceResolver';
+import {
+	extractPlayableFromTeraboxHtml,
+	resolvePlayableSource,
+	SourceResolutionError,
+} from '@/lib/sourceResolver';
 import { assertSafeUrl } from '@/lib/urlValidation';
 
 export const runtime = 'nodejs';
@@ -42,8 +46,22 @@ export const GET = async (request: NextRequest): Promise<Response> => {
 	}
 
 	try {
-		const resolvedSource = await resolvePlayableSource(rawUrl);
-		const safeUrl = await assertSafeUrl(resolvedSource.url);
+		let resolvedSource: { url: string; sourceResolution: { provider: 'direct' | 'terabox' | 'pixeldrain'; status: 'none' | 'resolved' | 'auth_required' } };
+
+		try {
+			resolvedSource = await resolvePlayableSource(rawUrl);
+		} catch (error) {
+			if (error instanceof SourceResolutionError && error.sourceResolution.provider === 'terabox') {
+				resolvedSource = {
+					url: rawUrl,
+					sourceResolution: error.sourceResolution,
+				};
+			} else {
+				throw error;
+			}
+		}
+
+		let safeUrl = await assertSafeUrl(resolvedSource.url);
 		const forwardHeaders = new Headers();
 
 		ALLOWED_FORWARD_HEADERS.forEach((name) => {
@@ -53,12 +71,32 @@ export const GET = async (request: NextRequest): Promise<Response> => {
 			}
 		});
 
-		const upstream = await fetch(safeUrl, {
+		let upstream = await fetch(safeUrl, {
 			method: 'GET',
 			redirect: 'follow',
 			headers: forwardHeaders,
 			cache: 'no-store',
 		});
+
+		const initialContentType = upstream.headers.get('content-type') ?? '';
+		const isTeraboxHtml = resolvedSource.sourceResolution.provider === 'terabox' && initialContentType.toLowerCase().includes('text/html');
+
+		if (isTeraboxHtml) {
+			const html = await upstream.text();
+			const extracted = extractPlayableFromTeraboxHtml(html);
+
+			if (extracted) {
+				safeUrl = await assertSafeUrl(extracted);
+				upstream = await fetch(safeUrl, {
+					method: 'GET',
+					redirect: 'follow',
+					headers: forwardHeaders,
+					cache: 'no-store',
+				});
+			} else {
+				return jsonError('TeraBox public link could not be resolved to a playable stream right now.', 400);
+			}
+		}
 
 		const responseHeaders = new Headers();
 		responseHeaders.set('cache-control', 'no-store');

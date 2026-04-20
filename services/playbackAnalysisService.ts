@@ -107,6 +107,16 @@ const isPixeldrainPublicUrl = (value: string): boolean => {
   }
 };
 
+const isTeraboxPublicUrl = (value: string): boolean => {
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+    return ['terabox', '1024tera', 'nephobox', '4funbox', 'momerybox', 'teraboxapp'].some((marker) => host.includes(marker));
+  } catch {
+    return false;
+  }
+};
+
 const buildAbsolutePlayableUrl = (playableUrl: string): string => {
   if (isHttpUrl(playableUrl)) {
     return playableUrl;
@@ -308,15 +318,16 @@ export const analyzePlaybackSource = async (url: string): Promise<PlaybackAnalys
   const corsRisk = host ? !normalized.includes(host) : true;
 
   if (mediaType === 'unknown') {
-    if (isPixeldrainPublicUrl(normalized)) {
+    if (isPixeldrainPublicUrl(normalized) || isTeraboxPublicUrl(normalized)) {
+      const providerLabel = isPixeldrainPublicUrl(normalized) ? 'Pixeldrain' : 'TeraBox';
       return {
         shouldProceed: true,
         playbackUrl: `/api/stream?url=${encodeURIComponent(normalized)}`,
         decision: 'proxy',
         severity: 'warning',
-        message: 'Analysis: Pixeldrain source detected. Starting with proxy playback fallback.',
+        message: `Analysis: ${providerLabel} source detected. Starting with proxy playback fallback.`,
         audioSupportNotice: 'AAC 2.0 is supported.',
-        sourceStatusLabel: 'Pixeldrain link detected',
+        sourceStatusLabel: `${providerLabel} link detected`,
         sourceStatusTone: 'info',
         currentFormat: mediaType,
         supportedFormats: SUPPORTED_FORMATS,
