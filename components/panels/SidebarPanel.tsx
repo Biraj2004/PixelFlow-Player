@@ -22,16 +22,19 @@ const TrackList = ({
   title,
   tracks,
   empty,
+  helper,
   onChoose,
 }: {
   title: string;
   tracks: SelectableTrack[];
   empty: string;
+  helper?: string;
   onChoose: (id: string) => void;
 }) => (
   <div className="bg-surface-low rounded-lg p-4 border border-white/5 space-y-3">
     <h3 className="text-xs font-display font-bold text-gray-500 uppercase tracking-widest">{title}</h3>
     <p className="text-[11px] text-gray-500">Available: {tracks.length > 0 ? `yes (${tracks.length})` : 'no'}</p>
+    {helper ? <p className="text-[11px] text-gray-500">{helper}</p> : null}
     {tracks.length === 0 ? (
       <p className="text-xs text-gray-500">{empty}</p>
     ) : (
@@ -73,6 +76,7 @@ const SidebarPanel = ({
 }: SidebarPanelProps) => {
   const mediaType = diagnostics?.mediaType === 'unknown' ? currentFormat : diagnostics?.mediaType || currentFormat;
   const corsRisk = diagnostics ? (diagnostics.corsLikelyRequired ? 'high' : 'low') : 'unknown';
+  const hasPrimaryAudioOnly = audioTracks.length === 1 && audioTracks[0]?.id === 'primary';
 
   return (
     <div className="space-y-4">
@@ -100,8 +104,20 @@ const SidebarPanel = ({
         </div>
       )}
 
-      <TrackList title="Audio Tracks" tracks={audioTracks} empty="No alternate audio tracks detected." onChoose={onChooseAudio} />
-      <TrackList title="Subtitle Tracks" tracks={subtitleTracks} empty="No subtitle tracks detected." onChoose={onChooseSubtitle} />
+      <TrackList
+        title="Audio Tracks"
+        tracks={audioTracks}
+        helper={hasPrimaryAudioOnly ? 'Primary embedded audio detected. No alternate audio tracks are exposed by this source.' : undefined}
+        empty="No audio tracks detected from this source metadata."
+        onChoose={onChooseAudio}
+      />
+      <TrackList
+        title="Subtitle Tracks"
+        tracks={subtitleTracks}
+        helper={subtitleTracks.length === 0 ? 'No subtitle tracks are exposed by this source. Add an external .vtt or .srt URL above if needed.' : undefined}
+        empty="No subtitle tracks detected."
+        onChoose={onChooseSubtitle}
+      />
 
       <div className="bg-surface-container rounded-lg border border-white/5 p-4 space-y-2">
         <h3 className="text-xs font-display font-bold text-gray-500 uppercase tracking-widest">Playback Details</h3>
